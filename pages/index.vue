@@ -5,14 +5,28 @@
     </div>
 
     <div class="grid grid-cols-6 gap-4">
-      <div v-for="i in 10" :key="i" class="card">
-        <span class="text-lg">Nom magasin</span>
-        <span>
-          Lorem ipsum dolor sit amet consectetur adipisicing elit. Ut omnis
-          exercitationem nemo? Exercitationem, magni perferendis ut, amet rerum
-          natus ex enim eveniet id magnam atque tenetur repudiandae tempore?
-          Consequuntur, a?
-        </span>
+      <div v-for="shop in shops" :key="shop.id" class="card">
+        <span class="text-lg">{{ shop.name }}</span>
+
+        <div class="grid grid-cols-3 gap-1 w-full">
+          <div
+            v-for="probe in shop.probes"
+            :key="probe.id"
+            class="flex flex-col items-center justify-center rounded-md"
+            :class="{
+              'bg-red-200': probe.temperature > 15,
+              'bg-yellow-200':
+                probe.temperature > 10 && probe.temperature <= 15,
+              'bg-green-200': probe.temperature <= 10,
+            }"
+          >
+            <span>
+              {{ probe.name }}
+            </span>
+
+            <span>{{ probe.temperature }}°C</span>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -21,9 +35,33 @@
 <script>
 export default {
   data() {
-    return {}
+    return {
+      shops: [],
+    }
   },
-  mounted() {},
-  methods: {},
+  mounted() {
+    this.fetchShops()
+  },
+  methods: {
+    fetchShops() {
+      for (let i = 0; i < 10; i++) {
+        let shop = {
+          id: i,
+          name: `Shop ${i}`,
+          probes: [],
+        }
+
+        for (let j = 0; j < 4; j++) {
+          shop.probes.push({
+            id: `${i}-${j}`,
+            name: `Probe ${j}`,
+            temperature: Math.floor(Math.random() * 21),
+          })
+        }
+
+        this.shops.push(shop)
+      }
+    },
+  },
 }
 </script>
