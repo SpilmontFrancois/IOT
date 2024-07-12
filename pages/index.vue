@@ -8,27 +8,35 @@
       <div v-for="shop in shops" :key="shop.id" class="card">
         <span class="text-lg">{{ shop.name }}</span>
 
-        <div class="grid grid-cols-3 gap-2 w-full">
+        <div class="grid grid-cols-2 gap-2 w-full">
           <div
-            v-for="probe in shop.probes"
-            :key="probe.id"
-            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2"
-            :class="{
-              'bg-red-200': probe.temperature > 15,
-              'bg-yellow-200':
-                probe.temperature > 10 && probe.temperature <= 15,
-              'bg-green-200': probe.temperature <= 10,
-            }"
-            @click="showModal(probe)"
+            v-for="fridge in shop.fridges"
+            :key="fridge.id"
+            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 bg-gray-200"
+            @click="showModal(fridge)"
           >
-            <div class="flex items-center space-x-2">
-              <fa-icon :icon="['fas', 'thermometer-half']" />
-              <span>
-                {{ probe.name }}
-              </span>
-            </div>
+            <span>
+              {{ fridge.name }}
+            </span>
 
-            <span>{{ probe.temperature }}°C</span>
+            <div class="flex flex-col space-y-1">
+              <div
+                v-for="probe in fridge.probes"
+                :key="probe.id"
+                class="rounded-md py-1 px-2"
+                :class="{
+                  'bg-red-200': probe.temperature > 15,
+                  'bg-yellow-200':
+                    probe.temperature > 10 && probe.temperature <= 15,
+                  'bg-green-200': probe.temperature <= 10,
+                }"
+              >
+                <div class="flex items-center space-x-2">
+                  <fa-icon :icon="['fas', 'thermometer-half']" />
+                  <span>{{ probe.name }} : {{ probe.temperature }}°C</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -60,15 +68,23 @@ export default {
         let shop = {
           id: i,
           name: `Magasin ${i}`,
-          probes: [],
+          fridges: [],
         }
 
-        for (let j = 0; j < 4; j++) {
-          shop.probes.push({
+        for (let j = 0; j < 5; j++) {
+          shop.fridges.push({
             id: `${i}-${j}`,
-            name: `Sonde ${j}`,
-            temperature: Math.floor(Math.random() * 21),
+            name: `Frigo ${j}`,
+            probes: [],
           })
+
+          for (let k = 0; k < 2; k++) {
+            shop.fridges[j].probes.push({
+              id: `${i}-${j}-${k}`,
+              name: `Sonde ${k}`,
+              temperature: Math.floor(Math.random() * 21),
+            })
+          }
         }
 
         this.shops.push(shop)
