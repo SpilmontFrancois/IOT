@@ -4,10 +4,18 @@ export default defineNuxtConfig({
 
   devtools: { enabled: true },
 
-  modules: ["@nuxtjs/tailwindcss"],
+  modules: ["@nuxtjs/tailwindcss", "@vesp/nuxt-fontawesome"],
 
   tailwindcss: {
     // Options
+  },
+
+  fontawesome: {
+    component: "fa",
+    suffix: true,
+    icons: {
+      solid: ['times', 'thermometer-half'],
+    },
   },
 
   css: ["~/assets/css/main.css"],

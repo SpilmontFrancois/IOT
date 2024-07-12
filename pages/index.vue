@@ -8,27 +8,37 @@
       <div v-for="shop in shops" :key="shop.id" class="card">
         <span class="text-lg">{{ shop.name }}</span>
 
-        <div class="grid grid-cols-3 gap-1 w-full">
+        <div class="grid grid-cols-3 gap-2 w-full">
           <div
             v-for="probe in shop.probes"
             :key="probe.id"
-            class="flex flex-col items-center justify-center rounded-md"
+            class="flex flex-col items-center justify-center rounded-md cursor-pointer"
             :class="{
               'bg-red-200': probe.temperature > 15,
               'bg-yellow-200':
                 probe.temperature > 10 && probe.temperature <= 15,
               'bg-green-200': probe.temperature <= 10,
             }"
+            @click="showModal(probe)"
           >
-            <span>
-              {{ probe.name }}
-            </span>
+            <div class="flex items-center space-x-2">
+              <fa-icon :icon="['fas', 'thermometer-half']" />
+              <span>
+                {{ probe.name }}
+              </span>
+            </div>
 
             <span>{{ probe.temperature }}°C</span>
           </div>
         </div>
       </div>
     </div>
+
+    <ModalProbe
+      v-if="showProbeChart"
+      :probe-name="selectedProbe.name"
+      @close="hideModal()"
+    />
   </div>
 </template>
 
@@ -37,6 +47,8 @@ export default {
   data() {
     return {
       shops: [],
+      showProbeChart: false,
+      selectedProbe: null,
     }
   },
   mounted() {
@@ -61,6 +73,14 @@ export default {
 
         this.shops.push(shop)
       }
+    },
+    showModal(probe) {
+      this.selectedProbe = probe
+      this.showProbeChart = true
+    },
+    hideModal() {
+      this.selectedProbe = null
+      this.showProbeChart = false
     },
   },
 }

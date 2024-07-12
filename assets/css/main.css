@@ -2,8 +2,41 @@
 @tailwind components;
 @tailwind utilities;
 
+@font-face {
+  font-family: RedHatDisplayBold;
+  src: url('assets/font-style/RedHatDisplay/RedHatDisplay-Bold.ttf')
+    format('truetype');
+}
+
+@font-face {
+  font-family: RedHatDisplayMedium;
+  src: url('assets/font-style/RedHatDisplay/RedHatDisplay-Medium.ttf')
+    format('truetype');
+}
+
+@font-face {
+  font-family: RedHatTextMedium;
+  src: url('assets/font-style/RedHatText/RedHatText-Medium.ttf')
+    format('truetype');
+}
+
+@font-face {
+  font-family: RedHatText;
+  src: url('assets/font-style/RedHatText/RedHatText-Regular.ttf')
+    format('truetype');
+}
+
 html {
+  font-family: RedHatText, serif;
   @apply bg-back text-text;
+}
+
+.font-semibold {
+  font-family: RedHatTextMedium, serif;
+}
+
+.font-bold {
+  font-family: RedHatDisplayBold, serif;
 }
 
 .card {
