@@ -4,7 +4,7 @@
       <span class="text-xl font-semibold">Liste des magasins</span>
     </div>
 
-    <div class="grid grid-cols-6 gap-4">
+    <div class="grid grid-cols-5 gap-4">
       <div v-for="shop in shops" :key="shop.id" class="card">
         <span class="text-lg">{{ shop.name }}</span>
 
@@ -12,7 +12,7 @@
           <div
             v-for="probe in shop.probes"
             :key="probe.id"
-            class="flex flex-col items-center justify-center rounded-md cursor-pointer"
+            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2"
             :class="{
               'bg-red-200': probe.temperature > 15,
               'bg-yellow-200':
@@ -59,14 +59,14 @@ export default {
       for (let i = 0; i < 10; i++) {
         let shop = {
           id: i,
-          name: `Shop ${i}`,
+          name: `Magasin ${i}`,
           probes: [],
         }
 
         for (let j = 0; j < 4; j++) {
           shop.probes.push({
             id: `${i}-${j}`,
-            name: `Probe ${j}`,
+            name: `Sonde ${j}`,
             temperature: Math.floor(Math.random() * 21),
           })
         }
