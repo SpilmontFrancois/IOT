@@ -10,7 +10,7 @@
         <div class="flex justify-between w-full">
           <span class="text-lg font-semibold whitespace-nowrap">
             Graphique d'évolution de la température pour la sonde :
-            {{ probeName }}
+            {{ probe.name }}
           </span>
 
           <div class="flex justify-end">
@@ -29,8 +29,8 @@
 <script>
 export default {
   props: {
-    probeName: {
-      type: String,
+    probe: {
+      type: Object,
       required: true,
     },
   },

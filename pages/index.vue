@@ -36,7 +36,7 @@
 
     <ModalProbe
       v-if="showProbeChart"
-      :probe-name="selectedProbe.name"
+      :probe="selectedProbe"
       @close="hideModal()"
     />
   </div>
