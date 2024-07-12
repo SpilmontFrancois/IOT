@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  @apply bg-back text-text;
+}
+
+.card {
+  @apply bg-white shadow-md rounded-lg flex flex-col items-center space-y-4 p-4;
+}
