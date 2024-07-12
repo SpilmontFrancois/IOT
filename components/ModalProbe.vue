@@ -8,8 +8,8 @@
     <div class="bg-white p-4 rounded-md z-20 w-1/2 center-component">
       <div class="flex justify-between w-full">
         <span class="text-lg font-semibold whitespace-nowrap">
-          Graphique d'évolution de la température pour la sonde :
-          {{ probe.name }}
+          Graphique d'évolution de la température pour le frigo :
+          {{ fridge.name }}
         </span>
 
         <div class="flex justify-end">
@@ -27,7 +27,7 @@
 <script>
 export default {
   props: {
-    probe: {
+    fridge: {
       type: Object,
       required: true,
     },

@@ -12,26 +12,36 @@
           <div
             v-for="fridge in shop.fridges"
             :key="fridge.id"
-            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit"
+            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors"
             :class="{
-              'bg-red-200': fridge.probes.some(
-                (probe) => probe.temperature > 15
-              ),
-              'bg-yellow-200': fridge.probes.some(
-                (probe) => probe.temperature > 10 && probe.temperature <= 15
-              ),
-              'bg-green-200': fridge.probes.every(
-                (probe) => probe.temperature <= 10
-              ),
               'bg-gray-200': fridge.showProbes,
+              'bg-red-200':
+                !fridge.showProbes &&
+                fridge.probes.some((probe) => probe.temperature > 15),
+              'bg-yellow-200':
+                !fridge.showProbes &&
+                fridge.probes.some(
+                  (probe) => probe.temperature > 10 && probe.temperature <= 15
+                ),
+              'bg-green-200':
+                !fridge.showProbes &&
+                fridge.probes.every((probe) => probe.temperature <= 10),
             }"
             @mouseover="fridge.showProbes = true"
             @mouseleave="fridge.showProbes = false"
             @click="showModal(fridge)"
           >
-            <span>
-              {{ fridge.name }}
-            </span>
+            <div class="flex items-center justify-between w-full">
+              <div />
+              <span>
+                {{ fridge.name }}
+              </span>
+              <fa-icon
+                :icon="['fas', 'chevron-down']"
+                class="transition-transform"
+                :class="{ 'transform rotate-180': fridge.showProbes }"
+              />
+            </div>
 
             <div v-if="fridge.showProbes" class="flex flex-col space-y-1">
               <div
@@ -58,7 +68,7 @@
 
     <ModalProbe
       v-if="showProbeChart"
-      :probe="selectedProbe"
+      :fridge="selectedFridge"
       @close="hideModal()"
     />
   </div>
@@ -70,7 +80,7 @@ export default {
     return {
       shops: [],
       showProbeChart: false,
-      selectedProbe: null,
+      selectedFridge: null,
     }
   },
   mounted() {
@@ -106,11 +116,11 @@ export default {
       }
     },
     showModal(probe) {
-      this.selectedProbe = probe
+      this.selectedFridge = probe
       this.showProbeChart = true
     },
     hideModal() {
-      this.selectedProbe = null
+      this.selectedFridge = null
       this.showProbeChart = false
     },
   },
