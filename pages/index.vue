@@ -12,7 +12,7 @@
           <div
             v-for="fridge in shop.fridges"
             :key="fridge.id"
-            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors"
+            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors duration-300 ease-in-out"
             :class="{
               'bg-gray-200': fridge.showProbes,
               'bg-red-200':
@@ -38,29 +38,36 @@
               </span>
               <fa-icon
                 :icon="['fas', 'chevron-down']"
-                class="transition-transform"
+                class="transition-transform duration-300"
                 :class="{ 'transform rotate-180': fridge.showProbes }"
               />
             </div>
 
-            <div v-if="fridge.showProbes" class="flex flex-col space-y-1">
+            <transition name="expand">
               <div
-                v-for="probe in fridge.probes"
-                :key="probe.id"
-                class="rounded-md py-1 px-2"
-                :class="{
-                  'bg-red-200': probe.temperature > 15,
-                  'bg-yellow-200':
-                    probe.temperature > 10 && probe.temperature <= 15,
-                  'bg-green-200': probe.temperature <= 10,
-                }"
+                v-show="fridge.showProbes"
+                class="flex flex-col space-y-1 w-full overflow-hidden"
+                style="transition: max-height 0.3s ease, opacity 0.3s ease;"
+                :style="{ maxHeight: fridge.showProbes ? '500px' : '0', opacity: fridge.showProbes ? '1' : '0' }"
               >
-                <div class="flex items-center space-x-2">
-                  <fa-icon :icon="['fas', 'thermometer-half']" />
-                  <span>{{ probe.name }} : {{ probe.temperature }}°C</span>
+                <div
+                  v-for="probe in fridge.probes"
+                  :key="probe.id"
+                  class="rounded-md py-1 px-2 transition-colors"
+                  :class="{
+                    'bg-red-200': probe.temperature > 15,
+                    'bg-yellow-200':
+                      probe.temperature > 10 && probe.temperature <= 15,
+                    'bg-green-200': probe.temperature <= 10,
+                  }"
+                >
+                  <div class="flex items-center space-x-2">
+                    <fa-icon :icon="['fas', 'thermometer-half']" />
+                    <span>{{ probe.name }} : {{ probe.temperature }}°C</span>
+                  </div>
                 </div>
               </div>
-            </div>
+            </transition>
           </div>
         </div>
       </div>
@@ -126,3 +133,15 @@ export default {
   },
 }
 </script>
+
+<style>
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease;
+}
+.expand-enter,
+.expand-leave-to /* .expand-leave-active in <2.1.8 */ {
+  opacity: 0;
+  max-height: 0;
+}
+</style>
