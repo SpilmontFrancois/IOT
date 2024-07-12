@@ -5,23 +5,21 @@
       @click="$emit('close')"
     />
 
-    <div class="flex items-center justify-center">
-      <div class="bg-white p-4 rounded-md z-20 w-1/2">
-        <div class="flex justify-between w-full">
-          <span class="text-lg font-semibold whitespace-nowrap">
-            Graphique d'évolution de la température pour la sonde :
-            {{ probe.name }}
-          </span>
+    <div class="bg-white p-4 rounded-md z-20 w-1/2 center-component">
+      <div class="flex justify-between w-full">
+        <span class="text-lg font-semibold whitespace-nowrap">
+          Graphique d'évolution de la température pour la sonde :
+          {{ probe.name }}
+        </span>
 
-          <div class="flex justify-end">
-            <button @click="$emit('close')">
-              <fa-icon :icon="['fas', 'times']" />
-            </button>
-          </div>
+        <div class="flex justify-end">
+          <button @click="$emit('close')">
+            <fa-icon :icon="['fas', 'times']" />
+          </button>
         </div>
-
-        <div>Chart à mettre ici</div>
       </div>
+
+      <div>Chart à mettre ici</div>
     </div>
   </div>
 </template>
