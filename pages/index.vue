@@ -12,14 +12,28 @@
           <div
             v-for="fridge in shop.fridges"
             :key="fridge.id"
-            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 bg-gray-200"
+            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit"
+            :class="{
+              'bg-red-200': fridge.probes.some(
+                (probe) => probe.temperature > 15
+              ),
+              'bg-yellow-200': fridge.probes.some(
+                (probe) => probe.temperature > 10 && probe.temperature <= 15
+              ),
+              'bg-green-200': fridge.probes.every(
+                (probe) => probe.temperature <= 10
+              ),
+              'bg-gray-200': fridge.showProbes,
+            }"
+            @mouseover="fridge.showProbes = true"
+            @mouseleave="fridge.showProbes = false"
             @click="showModal(fridge)"
           >
             <span>
               {{ fridge.name }}
             </span>
 
-            <div class="flex flex-col space-y-1">
+            <div v-if="fridge.showProbes" class="flex flex-col space-y-1">
               <div
                 v-for="probe in fridge.probes"
                 :key="probe.id"
@@ -76,6 +90,7 @@ export default {
             id: `${i}-${j}`,
             name: `Frigo ${j}`,
             probes: [],
+            showProbes: false,
           })
 
           for (let k = 0; k < 2; k++) {
