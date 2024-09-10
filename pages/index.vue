@@ -140,7 +140,14 @@ export default {
       shops: [],
       showProbeChart: false,
       selectedFridge: null,
-      chatOptions: {
+    }
+  },
+  mounted() {
+    this.fetchShops()
+  },
+  computed: {
+    chatOptions() {
+      return {
         chart: {
           type: "line",
         },
@@ -174,11 +181,8 @@ export default {
             },
           ],
         },
-      },
-    }
-  },
-  mounted() {
-    this.fetchShops()
+      }
+    },
   },
   methods: {
     fetchShops() {
