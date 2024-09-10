@@ -5,19 +5,76 @@
     </div>
 
     <div class="card space-y-2">
-      <span class="text-lg font-semibold">Légende</span>
-
       <div class="flex items-center justify-evenly w-full">
         <div class="flex items-center space-x-2">
-          <div class="rounded-full h-4 w-4 bg-red-200" />
+          <div
+            class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-red-200"
+          >
+            {{
+              shops.reduce(
+                (acc, shop) =>
+                  acc +
+                  shop.fridges.filter((fridge) =>
+                    fridge.probes.some(
+                      (probe) =>
+                        probe.temperatures[probe.temperatures.length - 1]
+                          .value > 15
+                    )
+                  ).length,
+                0
+              )
+            }}
+          </div>
           <span>Température > 15°C</span>
         </div>
         <div class="flex items-center space-x-2">
-          <div class="rounded-full h-4 w-4 bg-yellow-200" />
+          <div
+            class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-yellow-200"
+          >
+            {{
+              shops.reduce(
+                (acc, shop) =>
+                  acc +
+                  shop.fridges.filter(
+                    (fridge) =>
+                      fridge.probes.some(
+                        (probe) =>
+                          probe.temperatures[probe.temperatures.length - 1]
+                            .value > 10 &&
+                          probe.temperatures[probe.temperatures.length - 1]
+                            .value <= 15
+                      ) &&
+                      !fridge.probes.some(
+                        (probe) =>
+                          probe.temperatures[probe.temperatures.length - 1]
+                            .value > 15
+                      )
+                  ).length,
+                0
+              )
+            }}
+          </div>
           <span>Température > 10°C et ≤ 15°C</span>
         </div>
         <div class="flex items-center space-x-2">
-          <div class="rounded-full h-4 w-4 bg-green-200" />
+          <div
+            class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-green-200"
+          >
+            {{
+              shops.reduce(
+                (acc, shop) =>
+                  acc +
+                  shop.fridges.filter((fridge) =>
+                    fridge.probes.every(
+                      (probe) =>
+                        probe.temperatures[probe.temperatures.length - 1]
+                          .value <= 10
+                    )
+                  ).length,
+                0
+              )
+            }}
+          </div>
           <span>Température ≤ 10°C</span>
         </div>
       </div>
@@ -48,6 +105,10 @@
                       10 &&
                     probe.temperatures[probe.temperatures.length - 1].value <=
                       15
+                ) &&
+                !fridge.probes.some(
+                  (probe) =>
+                    probe.temperatures[probe.temperatures.length - 1].value > 15
                 ),
               'bg-green-200':
                 !fridge.showProbes &&
