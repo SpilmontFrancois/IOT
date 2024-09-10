@@ -4,21 +4,21 @@
       <span class="text-xl font-semibold">Liste des magasins</span>
     </div>
 
-    <div class="card">
-      <span class="text-lg font-semibold">Légende :</span>
+    <div class="card space-y-2">
+      <span class="text-lg font-semibold">Légende</span>
 
       <div class="flex items-center justify-evenly w-full">
         <div class="flex items-center space-x-2">
-          <div class="rounded-full h-2 w-2 bg-red-200" />
-          <span>température entre : >15°</span>
+          <div class="rounded-full h-4 w-4 bg-red-200" />
+          <span>Température > 15°C</span>
         </div>
         <div class="flex items-center space-x-2">
-          <div class="rounded-full h-2 w-2 bg-yellow-200" />
-          <span>température entre : >10° et <=15°</span>
+          <div class="rounded-full h-4 w-4 bg-yellow-200" />
+          <span>Température > 10°C et <= 15°C</span>
         </div>
         <div class="flex items-center space-x-2">
-          <div class="rounded-full h-2 w-2 bg-green-200" />
-          <span>température entre : <=10°</span>
+          <div class="rounded-full h-4 w-4 bg-green-200" />
+          <span>Température <= 10°C</span>
         </div>
       </div>
     </div>
@@ -28,7 +28,9 @@
         <span class="text-lg">{{ shop.name }}</span>
 
         <div class="grid grid-cols-2 gap-2 w-full">
-          <div v-for="fridge in shop.fridges" :key="fridge.id"
+          <div
+            v-for="fridge in shop.fridges"
+            :key="fridge.id"
             class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors duration-300 ease-in-out"
             :class="{
               'bg-gray-200': fridge.showProbes,
@@ -43,30 +45,44 @@
               'bg-green-200':
                 !fridge.showProbes &&
                 fridge.probes.every((probe) => probe.temperature <= 10),
-            }" @mouseover="fridge.showProbes = true" @mouseleave="fridge.showProbes = false"
-            @click="showModal(fridge)">
+            }"
+            @mouseover="fridge.showProbes = true"
+            @mouseleave="fridge.showProbes = false"
+            @click="showModal(fridge)"
+          >
             <div class="flex items-center justify-between w-full">
               <div />
               <span>
                 {{ fridge.name }}
               </span>
-              <fa-icon :icon="['fas', 'chevron-down']" class="transition-transform duration-300"
-                :class="{ 'transform rotate-180': fridge.showProbes }" />
+              <fa-icon
+                :icon="['fas', 'chevron-down']"
+                class="transition-transform duration-300"
+                :class="{ 'transform rotate-180': fridge.showProbes }"
+              />
             </div>
 
             <transition name="expand">
-              <div v-show="fridge.showProbes" class="flex flex-col space-y-1 w-full overflow-hidden"
-                style="transition: max-height 0.3s ease, opacity 0.3s ease" :style="{
+              <div
+                v-show="fridge.showProbes"
+                class="flex flex-col space-y-1 w-full overflow-hidden"
+                style="transition: max-height 0.3s ease, opacity 0.3s ease"
+                :style="{
                   maxHeight: fridge.showProbes ? '500px' : '0',
                   opacity: fridge.showProbes ? '1' : '0',
-                }">
-                <div v-for="probe in fridge.probes" :key="probe.id" class="rounded-md py-1 px-2 transition-colors"
+                }"
+              >
+                <div
+                  v-for="probe in fridge.probes"
+                  :key="probe.id"
+                  class="rounded-md py-1 px-2 transition-colors"
                   :class="{
                     'bg-red-200': probe.temperature > 15,
                     'bg-yellow-200':
                       probe.temperature > 10 && probe.temperature <= 15,
                     'bg-green-200': probe.temperature <= 10,
-                  }">
+                  }"
+                >
                   <div class="flex items-center space-x-2">
                     <fa-icon :icon="['fas', 'thermometer-half']" />
                     <span>{{ probe.name }} : {{ probe.temperature }}°C</span>
@@ -79,11 +95,16 @@
       </div>
     </div>
 
-    <ModalProbe v-if="showProbeChart" :fridge="selectedFridge" :series="selectedFridge.probes.map((probe) => ({
-      name: probe.name,
-      data: [probe.temperature],
-    }))
-      " :options="{
+    <ModalProbe
+      v-if="showProbeChart"
+      :fridge="selectedFridge"
+      :series="
+        selectedFridge.probes.map((probe) => ({
+          name: probe.name,
+          data: [probe.temperature],
+        }))
+      "
+      :options="{
         chart: {
           type: 'line',
         },
@@ -96,7 +117,9 @@
             19, 20,
           ],
         },
-      }" @close="hideModal()" />
+      }"
+      @close="hideModal()"
+    />
   </div>
 </template>
 
@@ -162,8 +185,7 @@ export default {
 .expand-enter,
 .expand-leave-to
 
-/* .expand-leave-active in <2.1.8 */
-  {
+/* .expand-leave-active in <2.1.8 */ {
   opacity: 0;
   max-height: 0;
 }
