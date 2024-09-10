@@ -10,8 +10,10 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "apexcharts": "^3.53.0",
     "nuxt": "^3.12.3",
-    "vue": "latest"
+    "vue": "latest",
+    "vue3-apexcharts": "^1.6.0"
   },
   "devDependencies": {
     "@fortawesome/free-brands-svg-icons": "^6.5.2",

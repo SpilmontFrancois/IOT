@@ -47,8 +47,11 @@
               <div
                 v-show="fridge.showProbes"
                 class="flex flex-col space-y-1 w-full overflow-hidden"
-                style="transition: max-height 0.3s ease, opacity 0.3s ease;"
-                :style="{ maxHeight: fridge.showProbes ? '500px' : '0', opacity: fridge.showProbes ? '1' : '0' }"
+                style="transition: max-height 0.3s ease, opacity 0.3s ease"
+                :style="{
+                  maxHeight: fridge.showProbes ? '500px' : '0',
+                  opacity: fridge.showProbes ? '1' : '0',
+                }"
               >
                 <div
                   v-for="probe in fridge.probes"
@@ -76,6 +79,26 @@
     <ModalProbe
       v-if="showProbeChart"
       :fridge="selectedFridge"
+      :series="
+        selectedFridge.probes.map((probe) => ({
+          name: probe.name,
+          data: [probe.temperature],
+        }))
+      "
+      :options="{
+        chart: {
+          type: 'line',
+        },
+        xaxis: {
+          categories: selectedFridge.probes.map((probe) => probe.name),
+        },
+        yaxis: {
+          categories: [
+            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
+            19, 20,
+          ],
+        },
+      }"
       @close="hideModal()"
     />
   </div>

@@ -10,6 +10,8 @@ export default defineNuxtConfig({
     // Options
   },
 
+  ssr: false,
+
   fontawesome: {
     component: "fa",
     suffix: true,

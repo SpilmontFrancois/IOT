@@ -19,7 +19,14 @@
         </div>
       </div>
 
-      <div>Chart à mettre ici</div>
+      <ClientOnly>
+        <apexchart
+          height="400"
+          width="100%"
+          :options="options"
+          :series="series"
+        />
+      </ClientOnly>
     </div>
   </div>
 </template>
@@ -28,6 +35,14 @@
 export default {
   props: {
     fridge: {
+      type: Object,
+      required: true,
+    },
+    series: {
+      type: Array,
+      required: true,
+    },
+    options: {
       type: Object,
       required: true,
     },
