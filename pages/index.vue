@@ -36,15 +36,26 @@
               'bg-gray-200': fridge.showProbes,
               'bg-red-200':
                 !fridge.showProbes &&
-                fridge.probes.some((probe) => probe.temperature > 15),
+                fridge.probes.some(
+                  (probe) =>
+                    probe.temperatures[probe.temperatures.length - 1].value > 15
+                ),
               'bg-yellow-200':
                 !fridge.showProbes &&
                 fridge.probes.some(
-                  (probe) => probe.temperature > 10 && probe.temperature <= 15
+                  (probe) =>
+                    probe.temperatures[probe.temperatures.length - 1].value >
+                      10 &&
+                    probe.temperatures[probe.temperatures.length - 1].value <=
+                      15
                 ),
               'bg-green-200':
                 !fridge.showProbes &&
-                fridge.probes.every((probe) => probe.temperature <= 10),
+                fridge.probes.every(
+                  (probe) =>
+                    probe.temperatures[probe.temperatures.length - 1].value <=
+                    10
+                ),
             }"
             @mouseover="fridge.showProbes = true"
             @mouseleave="fridge.showProbes = false"
@@ -77,15 +88,27 @@
                   :key="probe.id"
                   class="rounded-md py-1 px-2 transition-colors"
                   :class="{
-                    'bg-red-200': probe.temperature > 15,
+                    'bg-red-200':
+                      probe.temperatures[probe.temperatures.length - 1].value >
+                      15,
                     'bg-yellow-200':
-                      probe.temperature > 10 && probe.temperature <= 15,
-                    'bg-green-200': probe.temperature <= 10,
+                      probe.temperatures[probe.temperatures.length - 1].value >
+                        10 &&
+                      probe.temperatures[probe.temperatures.length - 1].value <=
+                        15,
+                    'bg-green-200':
+                      probe.temperatures[probe.temperatures.length - 1].value <=
+                      10,
                   }"
                 >
                   <div class="flex items-center space-x-2">
                     <fa-icon :icon="['fas', 'thermometer-half']" />
-                    <span>{{ probe.name }} : {{ probe.temperature }}°C</span>
+                    <span>
+                      {{ probe.name }} :
+                      {{
+                        probe.temperatures[probe.temperatures.length - 1].value
+                      }}°C
+                    </span>
                   </div>
                 </div>
               </div>
@@ -101,7 +124,7 @@
       :series="
         selectedFridge.probes.map((probe) => ({
           name: probe.name,
-          data: [probe.temperature],
+          data: probe.temperatures.map((temperature) => temperature.value),
         }))
       "
       :options="{
@@ -109,13 +132,9 @@
           type: 'line',
         },
         xaxis: {
-          categories: selectedFridge.probes.map((probe) => probe.name),
-        },
-        yaxis: {
-          categories: [
-            0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18,
-            19, 20,
-          ],
+          categories: selectedFridge.probes[0].temperatures.map(
+            (temperature) => temperature.date
+          ),
         },
       }"
       @close="hideModal()"
@@ -156,10 +175,25 @@ export default {
             shop.fridges[j].probes.push({
               id: `${i}-${j}-${k}`,
               name: `Sonde ${k}`,
-              temperature: Math.floor(Math.random() * 21),
+              temperatures: Array.from({ length: 20 }, () => ({
+                date: new Date(
+                  new Date().setHours(
+                    new Date().getHours() - Math.floor(Math.random() * 24)
+                  )
+                ).toISOString(),
+                value: Math.floor(Math.random() * 20),
+              })),
             })
           }
         }
+
+        shop.fridges.forEach((fridge) => {
+          fridge.probes.forEach((probe) => {
+            probe.temperatures.sort(
+              (a, b) => new Date(a.date) - new Date(b.date)
+            )
+          })
+        })
 
         this.shops.push(shop)
       }
