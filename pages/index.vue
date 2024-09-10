@@ -14,11 +14,11 @@
         </div>
         <div class="flex items-center space-x-2">
           <div class="rounded-full h-4 w-4 bg-yellow-200" />
-          <span>Température > 10°C et <= 15°C</span>
+          <span>Température > 10°C et ≤ 15°C</span>
         </div>
         <div class="flex items-center space-x-2">
           <div class="rounded-full h-4 w-4 bg-green-200" />
-          <span>Température <= 10°C</span>
+          <span>Température ≤ 10°C</span>
         </div>
       </div>
     </div>
