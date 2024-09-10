@@ -127,16 +127,7 @@
           data: probe.temperatures.map((temperature) => temperature.value),
         }))
       "
-      :options="{
-        chart: {
-          type: 'line',
-        },
-        xaxis: {
-          categories: selectedFridge.probes[0].temperatures.map(
-            (temperature) => temperature.date
-          ),
-        },
-      }"
+      :options="chatOptions"
       @close="hideModal()"
     />
   </div>
@@ -149,6 +140,41 @@ export default {
       shops: [],
       showProbeChart: false,
       selectedFridge: null,
+      chatOptions: {
+        chart: {
+          type: "line",
+        },
+        xaxis: {
+          categories: this.selectedFridge?.probes[0].temperatures.map(
+            (temperature) => temperature.date
+          ),
+        },
+        annotations: {
+          yaxis: [
+            {
+              y: 0,
+              y2: 10,
+              borderColor: "#000",
+              fillColor: "#bbf7d0",
+              opacity: 0.4,
+            },
+            {
+              y: 10,
+              y2: 15,
+              borderColor: "#000",
+              fillColor: "#fef08a",
+              opacity: 0.4,
+            },
+            {
+              y: 15,
+              y2: 20,
+              borderColor: "#000",
+              fillColor: "#fecaca",
+              opacity: 0.4,
+            },
+          ],
+        },
+      },
     }
   },
   mounted() {
