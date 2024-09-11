@@ -5,6 +5,8 @@
     </div>
 
     <div class="card space-y-2">
+      <span class="text-lg font-semibold">Filtres</span>
+
       <div class="flex items-center justify-evenly w-full">
         <div
           class="flex items-center space-x-2 cursor-pointer"
