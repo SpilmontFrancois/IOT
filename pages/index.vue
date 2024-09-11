@@ -133,7 +133,10 @@
 
     <div v-if="filteredShops.length" class="grid grid-cols-5 gap-4">
       <div v-for="shop in filteredShops" :key="shop.id" class="card">
-        <span class="text-lg">{{ shop.name }}</span>
+        <span class="text-lg">
+          {{ shop.name }} (T° moy. :
+          {{ getAverageTemperature(shop).toFixed(1) }}°C)
+        </span>
 
         <div class="grid grid-cols-2 gap-2 w-full">
           <div
