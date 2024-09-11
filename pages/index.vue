@@ -6,7 +6,11 @@
 
     <div class="card space-y-2">
       <div class="flex items-center justify-evenly w-full">
-        <div class="flex items-center space-x-2">
+        <div
+          class="flex items-center space-x-2 cursor-pointer"
+          :class="{ 'opacity-50': !filters.red }"
+          @click="filterShops('red')"
+        >
           <div
             class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-red-200"
           >
@@ -27,7 +31,11 @@
           </div>
           <span>Température > 15°C</span>
         </div>
-        <div class="flex items-center space-x-2">
+        <div
+          class="flex items-center space-x-2 cursor-pointer"
+          :class="{ 'opacity-50': !filters.yellow }"
+          @click="filterShops('yellow')"
+        >
           <div
             class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-yellow-200"
           >
@@ -56,7 +64,11 @@
           </div>
           <span>Température > 10°C et ≤ 15°C</span>
         </div>
-        <div class="flex items-center space-x-2">
+        <div
+          class="flex items-center space-x-2 cursor-pointer"
+          :class="{ 'opacity-50': !filters.green }"
+          @click="filterShops('green')"
+        >
           <div
             class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-green-200"
           >
@@ -80,8 +92,8 @@
       </div>
     </div>
 
-    <div class="grid grid-cols-5 gap-4">
-      <div v-for="shop in shops" :key="shop.id" class="card">
+    <div v-if="filteredShops.length" class="grid grid-cols-5 gap-4">
+      <div v-for="shop in filteredShops" :key="shop.id" class="card">
         <span class="text-lg">{{ shop.name }}</span>
 
         <div class="grid grid-cols-2 gap-2 w-full">
@@ -178,6 +190,9 @@
         </div>
       </div>
     </div>
+    <span v-else class="font-semibold text-xl text-center">
+      Aucun magasin ne correspond à vos critères de recherche
+    </span>
 
     <ModalProbe
       v-if="showProbeChart"
@@ -199,6 +214,12 @@ export default {
   data() {
     return {
       shops: [],
+      filteredShops: [],
+      filters: {
+        red: true,
+        yellow: true,
+        green: true,
+      },
       showProbeChart: false,
       selectedFridge: null,
     }
@@ -288,6 +309,42 @@ export default {
 
         this.shops.push(shop)
       }
+
+      this.filteredShops = this.shops
+    },
+    filterShops(color) {
+      this.filters[color] = !this.filters[color]
+
+      this.filteredShops = this.shops
+        .map((shop) => {
+          const filteredFridges = shop.fridges
+            .map((fridge) => {
+              const filteredProbes = fridge.probes.filter((probe) => {
+                let lastTemperature =
+                  probe.temperatures[probe.temperatures.length - 1].value
+
+                return (
+                  (this.filters.red && lastTemperature > 15) ||
+                  (this.filters.yellow &&
+                    lastTemperature > 10 &&
+                    lastTemperature <= 15) ||
+                  (this.filters.green && lastTemperature <= 10)
+                )
+              })
+
+              return {
+                ...fridge,
+                probes: filteredProbes,
+              }
+            })
+            .filter((fridge) => fridge.probes.length > 0)
+
+          return {
+            ...shop,
+            fridges: filteredFridges,
+          }
+        })
+        .filter((shop) => shop.fridges.length > 0)
     },
     showModal(probe) {
       this.selectedFridge = probe
