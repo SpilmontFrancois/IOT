@@ -49,3 +49,11 @@ html {
   left: 50%;
   transform: translate(-50%, -50%);
 }
+
+.input {
+  @apply border-2 border-gray-300 rounded-lg p-2 w-full;
+}
+
+.select {
+  @apply border-2 border-gray-300 rounded-lg p-2 w-full;
+}

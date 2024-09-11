@@ -4,94 +4,131 @@
       <span class="text-xl font-semibold">Liste des magasins</span>
     </div>
 
-    <div class="card space-y-2">
-      <span class="text-lg font-semibold">Filtres</span>
+    <div class="flex space-x-6">
+      <div class="card space-y-2 w-2/3">
+        <span class="text-lg font-semibold">Filtres</span>
 
-      <div class="flex items-center justify-evenly w-full">
-        <div
-          class="flex items-center space-x-2 cursor-pointer"
-          :class="{ 'opacity-50': !filters.red }"
-          @click="filterShops('red')"
-        >
+        <div class="flex items-center justify-evenly w-full">
           <div
-            class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-red-200"
+            class="flex items-center space-x-2 cursor-pointer"
+            :class="{ 'opacity-50': !filters.red }"
+            @click="toggleFilter('red')"
           >
-            {{
-              shops.reduce(
-                (acc, shop) =>
-                  acc +
-                  shop.fridges.filter((fridge) =>
-                    fridge.probes.some(
-                      (probe) =>
-                        probe.temperatures[probe.temperatures.length - 1]
-                          .value > 15
-                    )
-                  ).length,
-                0
-              )
-            }}
-          </div>
-          <span>Température > 15°C</span>
-        </div>
-        <div
-          class="flex items-center space-x-2 cursor-pointer"
-          :class="{ 'opacity-50': !filters.yellow }"
-          @click="filterShops('yellow')"
-        >
-          <div
-            class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-yellow-200"
-          >
-            {{
-              shops.reduce(
-                (acc, shop) =>
-                  acc +
-                  shop.fridges.filter(
-                    (fridge) =>
+            <div
+              class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-red-200"
+            >
+              {{
+                shops.reduce(
+                  (acc, shop) =>
+                    acc +
+                    shop.fridges.filter((fridge) =>
                       fridge.probes.some(
-                        (probe) =>
-                          probe.temperatures[probe.temperatures.length - 1]
-                            .value > 10 &&
-                          probe.temperatures[probe.temperatures.length - 1]
-                            .value <= 15
-                      ) &&
-                      !fridge.probes.some(
                         (probe) =>
                           probe.temperatures[probe.temperatures.length - 1]
                             .value > 15
                       )
-                  ).length,
-                0
-              )
-            }}
+                    ).length,
+                  0
+                )
+              }}
+            </div>
+            <span>Température > 15°C</span>
           </div>
-          <span>Température > 10°C et ≤ 15°C</span>
-        </div>
-        <div
-          class="flex items-center space-x-2 cursor-pointer"
-          :class="{ 'opacity-50': !filters.green }"
-          @click="filterShops('green')"
-        >
           <div
-            class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-green-200"
+            class="flex items-center space-x-2 cursor-pointer"
+            :class="{ 'opacity-50': !filters.yellow }"
+            @click="toggleFilter('yellow')"
           >
-            {{
-              shops.reduce(
-                (acc, shop) =>
-                  acc +
-                  shop.fridges.filter((fridge) =>
-                    fridge.probes.every(
-                      (probe) =>
-                        probe.temperatures[probe.temperatures.length - 1]
-                          .value <= 10
-                    )
-                  ).length,
-                0
-              )
-            }}
+            <div
+              class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-yellow-200"
+            >
+              {{
+                shops.reduce(
+                  (acc, shop) =>
+                    acc +
+                    shop.fridges.filter(
+                      (fridge) =>
+                        fridge.probes.some(
+                          (probe) =>
+                            probe.temperatures[probe.temperatures.length - 1]
+                              .value > 10 &&
+                            probe.temperatures[probe.temperatures.length - 1]
+                              .value <= 15
+                        ) &&
+                        !fridge.probes.some(
+                          (probe) =>
+                            probe.temperatures[probe.temperatures.length - 1]
+                              .value > 15
+                        )
+                    ).length,
+                  0
+                )
+              }}
+            </div>
+            <span>Température > 10°C et ≤ 15°C</span>
           </div>
-          <span>Température ≤ 10°C</span>
+          <div
+            class="flex items-center space-x-2 cursor-pointer"
+            :class="{ 'opacity-50': !filters.green }"
+            @click="toggleFilter('green')"
+          >
+            <div
+              class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-green-200"
+            >
+              {{
+                shops.reduce(
+                  (acc, shop) =>
+                    acc +
+                    shop.fridges.filter((fridge) =>
+                      fridge.probes.every(
+                        (probe) =>
+                          probe.temperatures[probe.temperatures.length - 1]
+                            .value <= 10
+                      )
+                    ).length,
+                  0
+                )
+              }}
+            </div>
+            <span>Température ≤ 10°C</span>
+          </div>
         </div>
       </div>
+
+      <div class="card space-y-2 w-1/3">
+        <span class="text-lg font-semibold">Trier par</span>
+
+        <div class="flex items-center space-x-4 w-full">
+          <select
+            v-model="sortKey"
+            @change="applyFiltersAndSort"
+            class="select"
+          >
+            <option value="name">Nom</option>
+            <option value="fridges">Nombre de réfrigérateurs</option>
+            <option value="temperature">Température moyenne</option>
+          </select>
+
+          <select
+            v-model="sortOrder"
+            @change="applyFiltersAndSort"
+            class="select"
+          >
+            <option value="asc">Croissant</option>
+            <option value="desc">Décroissant</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <input
+        v-model="search"
+        type="text"
+        placeholder="Rechercher un magasin"
+        class="input"
+        @input="applyFiltersAndSort"
+      />
     </div>
 
     <div v-if="filteredShops.length" class="grid grid-cols-5 gap-4">
@@ -222,6 +259,9 @@ export default {
         yellow: true,
         green: true,
       },
+      search: "",
+      sortKey: "name",
+      sortOrder: "asc",
       showProbeChart: false,
       selectedFridge: null,
     }
@@ -266,6 +306,17 @@ export default {
           ],
         },
       }
+    },
+  },
+  watch: {
+    search() {
+      this.applyFiltersAndSort()
+    },
+    sortKey() {
+      this.applyFiltersAndSort()
+    },
+    sortOrder() {
+      this.applyFiltersAndSort()
     },
   },
   methods: {
@@ -314,9 +365,11 @@ export default {
 
       this.filteredShops = this.shops
     },
-    filterShops(color) {
+    toggleFilter(color) {
       this.filters[color] = !this.filters[color]
-
+      this.applyFiltersAndSort()
+    },
+    applyFiltersAndSort() {
       this.filteredShops = this.shops
         .map((shop) => {
           const filteredFridges = shop.fridges
@@ -347,6 +400,51 @@ export default {
           }
         })
         .filter((shop) => shop.fridges.length > 0)
+
+      this.filteredShops = this.filteredShops.filter((shop) =>
+        shop.name.toLowerCase().includes(this.search.toLowerCase())
+      )
+
+      this.sortShops()
+    },
+    sortShops() {
+      const key = this.sortKey
+      const order = this.sortOrder
+      // filter depending on order
+      if (order === "asc") {
+        this.filteredShops.sort((a, b) => {
+          if (key === "name") return a.name.localeCompare(b.name)
+          else if (key === "fridges") return a.fridges.length - b.fridges.length
+          else if (key === "temperature") {
+            const avgTempA = this.getAverageTemperature(a)
+            const avgTempB = this.getAverageTemperature(b)
+            return avgTempA - avgTempB
+          }
+        })
+      } else {
+        this.filteredShops.sort((a, b) => {
+          if (key === "name") return b.name.localeCompare(a.name)
+          else if (key === "fridges") return b.fridges.length - a.fridges.length
+          else if (key === "temperature") {
+            const avgTempA = this.getAverageTemperature(a)
+            const avgTempB = this.getAverageTemperature(b)
+            return avgTempB - avgTempA
+          }
+        })
+      }
+    },
+    getAverageTemperature(shop) {
+      let totalTemp = 0
+      let count = 0
+
+      shop.fridges.forEach((fridge) => {
+        fridge.probes.forEach((probe) => {
+          totalTemp += probe.temperatures[probe.temperatures.length - 1].value
+          count++
+        })
+      })
+
+      return totalTemp / count
     },
     showModal(probe) {
       this.selectedFridge = probe
