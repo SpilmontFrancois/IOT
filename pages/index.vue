@@ -273,7 +273,7 @@ const selectedFridge = ref(null)
 // Fetch the shops data
 const fetchShops = async () => {
   const data = await $fetch(
-    `${config.public.API_URL}/machine/machines-by-passerelle-id/1`,
+    `${config.public.API_URL}/magasin/magasin`,
     {
       headers: {
         Authorization: `Bearer ${config.public.API_TOKEN}`,
