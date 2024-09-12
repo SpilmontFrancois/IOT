@@ -37,10 +37,10 @@
                       (acc, gateway) =>
                         acc +
                         gateway.machines.filter((fridge) =>
-                          fridge.probes.some(
+                          fridge.sondes.some(
                             (probe) =>
-                              probe.temperatures[probe.temperatures.length - 1]
-                                .value > 15
+                              probe.mesures[probe.mesures.length - 1]?.value >
+                              15
                           )
                         ).length,
                       0
@@ -68,20 +68,17 @@
                         acc +
                         gateway.machines.filter(
                           (fridge) =>
-                            fridge.probes.some(
+                            fridge.sondes.some(
                               (probe) =>
-                                probe.temperatures[
-                                  probe.temperatures.length - 1
-                                ].value > 10 &&
-                                probe.temperatures[
-                                  probe.temperatures.length - 1
-                                ].value <= 15
+                                probe.mesures[probe.mesures.length - 1]?.value >
+                                  10 &&
+                                probe.mesures[probe.mesures.length - 1]
+                                  ?.value <= 15
                             ) &&
-                            !fridge.probes.some(
+                            !fridge.sondes.some(
                               (probe) =>
-                                probe.temperatures[
-                                  probe.temperatures.length - 1
-                                ].value > 15
+                                probe.mesures[probe.mesures.length - 1]?.value >
+                                15
                             )
                         ).length,
                       0
@@ -108,10 +105,10 @@
                       (acc, gateway) =>
                         acc +
                         gateway.machines.filter((fridge) =>
-                          fridge.probes.every(
+                          fridge.sondes.every(
                             (probe) =>
-                              probe.temperatures[probe.temperatures.length - 1]
-                                .value <= 10
+                              probe.mesures[probe.mesures.length - 1]?.value <=
+                              10
                           )
                         ).length,
                       0
@@ -168,44 +165,48 @@
           {{ getAverageTemperature(shop).toFixed(1) }}°C)
         </span>
 
-        <div class="grid grid-cols-2 gap-2 w-full">
+        <button class="btn-primary" @click="showModalMachine(shop)">+</button>
+
+        <div
+          v-if="shop.passerelles.length > 0"
+          class="grid grid-cols-2 gap-2 w-full"
+        >
           <div
-            v-for="fridge in shop.machines"
+            v-for="fridge in shop.passerelles[0].machines"
             :key="fridge.id"
             class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors duration-300 ease-in-out"
             :class="{
               'bg-gray-200': fridge.showProbes,
               'bg-red-200':
                 !fridge.showProbes &&
-                fridge.probes.some(
-                  (probe) =>
-                    probe.temperatures[probe.temperatures.length - 1].value > 15
+                fridge.sondes.some(
+                  (probe) => probe.mesures[probe.mesures.length - 1]?.value > 15
                 ),
               'bg-yellow-200':
                 !fridge.showProbes &&
-                fridge.probes.some(
+                fridge.sondes.some(
                   (probe) =>
-                    probe.temperatures[probe.temperatures.length - 1].value >
-                      10 &&
-                    probe.temperatures[probe.temperatures.length - 1].value <=
-                      15
+                    probe.mesures[probe.mesures.length - 1]?.value > 10 &&
+                    probe.mesures[probe.mesures.length - 1]?.value <= 15
                 ) &&
-                !fridge.probes.some(
-                  (probe) =>
-                    probe.temperatures[probe.temperatures.length - 1].value > 15
+                !fridge.sondes.some(
+                  (probe) => probe.mesures[probe.mesures.length - 1]?.value > 15
                 ),
               'bg-green-200':
                 !fridge.showProbes &&
-                fridge.probes.every(
+                fridge.sondes.every(
                   (probe) =>
-                    probe.temperatures[probe.temperatures.length - 1].value <=
-                    10
+                    probe.mesures[probe.mesures.length - 1]?.value <= 10
                 ),
             }"
             @mouseover="fridge.showProbes = true"
             @mouseleave="fridge.showProbes = false"
             @click="showModal(fridge)"
           >
+            <button class="btn-primary" @click.stop="showModalProbe(fridge)">
+              +
+            </button>
+
             <div class="flex items-center justify-between w-full">
               <div />
               <span>
@@ -229,30 +230,24 @@
                 }"
               >
                 <div
-                  v-for="probe in fridge.probes"
+                  v-for="probe in fridge.sondes"
                   :key="probe.id"
                   class="rounded-md py-1 px-2 transition-colors"
                   :class="{
                     'bg-red-200':
-                      probe.temperatures[probe.temperatures.length - 1].value >
-                      15,
+                      probe.mesures[probe.mesures.length - 1]?.value > 15,
                     'bg-yellow-200':
-                      probe.temperatures[probe.temperatures.length - 1].value >
-                        10 &&
-                      probe.temperatures[probe.temperatures.length - 1].value <=
-                        15,
+                      probe.mesures[probe.mesures.length - 1]?.value > 10 &&
+                      probe.mesures[probe.mesures.length - 1]?.value <= 15,
                     'bg-green-200':
-                      probe.temperatures[probe.temperatures.length - 1].value <=
-                      10,
+                      probe.mesures[probe.mesures.length - 1]?.value <= 10,
                   }"
                 >
                   <div class="flex items-center space-x-2">
                     <fa-icon :icon="['fas', 'thermometer-half']" />
                     <span>
                       {{ probe.name }} :
-                      {{
-                        probe.temperatures[probe.temperatures.length - 1].value
-                      }}°C
+                      {{ probe.mesures[probe.mesures.length - 1]?.value }}°C
                     </span>
                   </div>
                 </div>
@@ -270,9 +265,9 @@
       v-if="showProbeChart"
       :fridge="selectedFridge"
       :series="
-        selectedFridge.probes.map((probe) => ({
+        selectedFridge.sondes.map((probe) => ({
           name: probe.name,
-          data: probe.temperatures.map((temperature) => temperature.value),
+          data: probe.mesures.map((temperature) => temperature.value),
         }))
       "
       :options="chatOptions"
@@ -299,6 +294,53 @@
         </div>
       </template>
     </Modal>
+
+    <Modal
+      v-if="showAddMachine"
+      title="Ajouter une machine"
+      :class="'w-1/3'"
+      @close="showAddMachine = false"
+    >
+      <template #body>
+        <div class="flex flex-col space-y-1 text-gray-500 w-full">
+          <label for="name">Nom de la machine</label>
+          <input
+            v-model="newMachine.name"
+            type="text"
+            id="name"
+            class="input"
+          />
+        </div>
+      </template>
+
+      <template #footer="{ slotScope }">
+        <div class="flex justify-center mt-5 items-center space-x-5">
+          <button class="btn-danger" @click="slotScope()">Annuler</button>
+          <button class="btn-primary" @click="saveMachine">Enregistrer</button>
+        </div>
+      </template>
+    </Modal>
+
+    <Modal
+      v-if="showAddProbe"
+      title="Ajouter une sonde"
+      :class="'w-1/3'"
+      @close="showAddProbe = false"
+    >
+      <template #body>
+        <div class="flex flex-col space-y-1 text-gray-500 w-full">
+          <label for="name">Nom de la sonde</label>
+          <input v-model="newProbe.name" type="text" id="name" class="input" />
+        </div>
+      </template>
+
+      <template #footer="{ slotScope }">
+        <div class="flex justify-center mt-5 items-center space-x-5">
+          <button class="btn-danger" @click="slotScope()">Annuler</button>
+          <button class="btn-primary" @click="saveProbe">Enregistrer</button>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -321,7 +363,17 @@ const sortOrder = ref("asc")
 const showProbeChart = ref(false)
 const selectedFridge = ref(null)
 const showAddShop = ref(false)
+const showAddProbe = ref(false)
 const newShop = ref({
+  name: "",
+})
+const selectedMachine = ref(null)
+const selectedShop = ref(null)
+const showAddMachine = ref(false)
+const newMachine = ref({
+  name: "",
+})
+const newProbe = ref({
   name: "",
 })
 
@@ -337,8 +389,8 @@ const fetchShops = async () => {
   data.forEach((shop) => {
     shop.passerelles.forEach((gateway) => {
       gateway.machines.forEach((fridge) => {
-        fridge.probes.forEach((probe) => {
-          probe.temperatures.sort((a, b) => new Date(a.date) - new Date(b.date))
+        fridge.sondes.forEach((probe) => {
+          probe.mesures.sort((a, b) => new Date(a.date) - new Date(b.date))
         })
       })
     })
@@ -376,15 +428,52 @@ const saveShop = async () => {
   fetchShops()
 }
 
+const saveMachine = async () => {
+  await $fetch(`${config.public.API_URL}/machine/machine`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.public.API_TOKEN}`,
+    },
+    body: JSON.stringify({
+      name: newMachine.value.name,
+      idPhysique: newMachine.value.name,
+      passerelleId: selectedShop.value.passerelles[0].id,
+    }),
+  })
+
+  showAddMachine.value = false
+
+  fetchShops()
+}
+
+const saveProbe = async () => {
+  const data = await $fetch(`${config.public.API_URL}/sonde/sonde`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.public.API_TOKEN}`,
+    },
+    body: JSON.stringify({
+      name: newProbe.value.name,
+      idPhysique: newProbe.value.name,
+      machineId: selectedMachine.value.id,
+    }),
+  })
+
+  showAddProbe.value = false
+
+  fetchShops()
+}
+
 // Apply filters and sort
 const applyFiltersAndSort = () => {
   filteredShops.value = shops.value
     .map((shop) => {
       const filteredmachines = shop.machines
         .map((fridge) => {
-          const filteredProbes = fridge.probes.filter((probe) => {
-            let lastTemperature =
-              probe.temperatures[probe.temperatures.length - 1].value
+          const filteredProbes = fridge.sondes.filter((probe) => {
+            let lastTemperature = probe.mesures[probe.mesures.length - 1]?.value
 
             return (
               (filters.value.red && lastTemperature > 15) ||
@@ -397,10 +486,10 @@ const applyFiltersAndSort = () => {
 
           return {
             ...fridge,
-            probes: filteredProbes,
+            sondes: filteredProbes,
           }
         })
-        .filter((fridge) => fridge.probes.length > 0)
+        .filter((fridge) => fridge.sondes.length > 0)
 
       return {
         ...shop,
@@ -451,8 +540,8 @@ const getAverageTemperature = (shop) => {
 
   shop.passerelles.forEach((gateway) => {
     gateway.machines.forEach((fridge) => {
-      fridge.probes.forEach((probe) => {
-        totalTemp += probe.temperatures[probe.temperatures.length - 1].value
+      fridge.sondes.forEach((probe) => {
+        totalTemp += probe.mesures[probe.mesures.length - 1]?.value
         count++
       })
     })
@@ -467,6 +556,16 @@ const showModal = (probe) => {
   showProbeChart.value = true
 }
 
+const showModalMachine = (shop) => {
+  selectedShop.value = shop
+  showAddMachine.value = true
+}
+
+const showModalProbe = (machine) => {
+  selectedMachine.value = machine
+  showAddProbe.value = true
+}
+
 const hideModal = () => {
   selectedFridge.value = null
   showProbeChart.value = false
@@ -478,7 +577,7 @@ const chatOptions = computed(() => ({
     type: "line",
   },
   xaxis: {
-    categories: selectedFridge.value?.probes[0].temperatures.map(
+    categories: selectedFridge.value?.sondes[0].mesures.map(
       (temperature) => temperature.date
     ),
   },
