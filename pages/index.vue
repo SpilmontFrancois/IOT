@@ -251,214 +251,226 @@
   </div>
 </template>
 
-<script>
-export default {
-  data() {
-    return {
-      shops: [],
-      filteredShops: [],
-      filters: {
-        red: true,
-        yellow: true,
-        green: true,
+<script setup>
+import { ref, computed, onMounted, watch } from "vue"
+
+const config = useRuntimeConfig()
+
+// Reactive state
+const shops = ref([])
+const filteredShops = ref([])
+const filters = ref({
+  red: true,
+  yellow: true,
+  green: true,
+})
+const search = ref("")
+const sortKey = ref("name")
+const sortOrder = ref("asc")
+const showProbeChart = ref(false)
+const selectedFridge = ref(null)
+
+// Fetch the shops data
+const fetchShops = async () => {
+  const data = await $fetch(
+    `${config.public.API_URL}/machine/machines-by-passerelle-id/1`,
+    {
+      headers: {
+        Authorization: `Bearer ${config.public.API_TOKEN}`,
       },
-      search: "",
-      sortKey: "name",
-      sortOrder: "asc",
-      showProbeChart: false,
-      selectedFridge: null,
     }
-  },
-  mounted() {
-    this.fetchShops()
-  },
-  computed: {
-    chatOptions() {
-      return {
-        chart: {
-          type: "line",
-        },
-        xaxis: {
-          categories: this.selectedFridge?.probes[0].temperatures.map(
-            (temperature) => temperature.date
-          ),
-        },
-        annotations: {
-          yaxis: [
-            {
-              y: 0,
-              y2: 10,
-              borderColor: "#000",
-              fillColor: "#bbf7d0",
-              opacity: 0.4,
-            },
-            {
-              y: 10,
-              y2: 15,
-              borderColor: "#000",
-              fillColor: "#fef08a",
-              opacity: 0.4,
-            },
-            {
-              y: 15,
-              y2: 20,
-              borderColor: "#000",
-              fillColor: "#fecaca",
-              opacity: 0.4,
-            },
-          ],
-        },
-      }
-    },
-  },
-  watch: {
-    search() {
-      this.applyFiltersAndSort()
-    },
-    sortKey() {
-      this.applyFiltersAndSort()
-    },
-    sortOrder() {
-      this.applyFiltersAndSort()
-    },
-  },
-  methods: {
-    fetchShops() {
-      for (let i = 0; i < 10; i++) {
-        let shop = {
-          id: i,
-          name: `Magasin ${i}`,
-          fridges: [],
-        }
+  ).then((res) => res.json())
+  console.log(data)
 
-        for (let j = 0; j < 5; j++) {
-          shop.fridges.push({
-            id: `${i}-${j}`,
-            name: `Frigo ${j}`,
-            probes: [],
-            showProbes: false,
-          })
+  // for (let i = 0; i < 10; i++) {
+  //   let shop = {
+  //     id: i,
+  //     name: `Magasin ${i}`,
+  //     fridges: [],
+  //   }
 
-          for (let k = 0; k < 2; k++) {
-            shop.fridges[j].probes.push({
-              id: `${i}-${j}-${k}`,
-              name: `Sonde ${k}`,
-              temperatures: Array.from({ length: 20 }, () => ({
-                date: new Date(
-                  new Date().setHours(
-                    new Date().getHours() - Math.floor(Math.random() * 24)
-                  )
-                ).toISOString(),
-                value: Math.floor(Math.random() * 20),
-              })),
-            })
-          }
-        }
+  //   for (let j = 0; j < 5; j++) {
+  //     shop.fridges.push({
+  //       id: `${i}-${j}`,
+  //       name: `Frigo ${j}`,
+  //       probes: [],
+  //       showProbes: false,
+  //     })
 
-        shop.fridges.forEach((fridge) => {
-          fridge.probes.forEach((probe) => {
-            probe.temperatures.sort(
-              (a, b) => new Date(a.date) - new Date(b.date)
+  //     for (let k = 0; k < 2; k++) {
+  //       shop.fridges[j].probes.push({
+  //         id: `${i}-${j}-${k}`,
+  //         name: `Sonde ${k}`,
+  //         temperatures: Array.from({ length: 20 }, () => ({
+  //           date: new Date(
+  //             new Date().setHours(
+  //               new Date().getHours() - Math.floor(Math.random() * 24)
+  //             )
+  //           ).toISOString(),
+  //           value: Math.floor(Math.random() * 20),
+  //         })),
+  //       })
+  //     }
+  //   }
+
+  //   shop.fridges.forEach((fridge) => {
+  //     fridge.probes.forEach((probe) => {
+  //       probe.temperatures.sort((a, b) => new Date(a.date) - new Date(b.date))
+  //     })
+  //   })
+
+  //   shops.value.push(shop)
+  // }
+
+  filteredShops.value = shops.value
+}
+
+// Apply filters and sort
+const applyFiltersAndSort = () => {
+  filteredShops.value = shops.value
+    .map((shop) => {
+      const filteredFridges = shop.fridges
+        .map((fridge) => {
+          const filteredProbes = fridge.probes.filter((probe) => {
+            let lastTemperature =
+              probe.temperatures[probe.temperatures.length - 1].value
+
+            return (
+              (filters.value.red && lastTemperature > 15) ||
+              (filters.value.yellow &&
+                lastTemperature > 10 &&
+                lastTemperature <= 15) ||
+              (filters.value.green && lastTemperature <= 10)
             )
           })
-        })
-
-        this.shops.push(shop)
-      }
-
-      this.filteredShops = this.shops
-    },
-    toggleFilter(color) {
-      this.filters[color] = !this.filters[color]
-      this.applyFiltersAndSort()
-    },
-    applyFiltersAndSort() {
-      this.filteredShops = this.shops
-        .map((shop) => {
-          const filteredFridges = shop.fridges
-            .map((fridge) => {
-              const filteredProbes = fridge.probes.filter((probe) => {
-                let lastTemperature =
-                  probe.temperatures[probe.temperatures.length - 1].value
-
-                return (
-                  (this.filters.red && lastTemperature > 15) ||
-                  (this.filters.yellow &&
-                    lastTemperature > 10 &&
-                    lastTemperature <= 15) ||
-                  (this.filters.green && lastTemperature <= 10)
-                )
-              })
-
-              return {
-                ...fridge,
-                probes: filteredProbes,
-              }
-            })
-            .filter((fridge) => fridge.probes.length > 0)
 
           return {
-            ...shop,
-            fridges: filteredFridges,
+            ...fridge,
+            probes: filteredProbes,
           }
         })
-        .filter((shop) => shop.fridges.length > 0)
+        .filter((fridge) => fridge.probes.length > 0)
 
-      this.filteredShops = this.filteredShops.filter((shop) =>
-        shop.name.toLowerCase().includes(this.search.toLowerCase())
-      )
-
-      this.sortShops()
-    },
-    sortShops() {
-      const key = this.sortKey
-      const order = this.sortOrder
-      // filter depending on order
-      if (order === "asc") {
-        this.filteredShops.sort((a, b) => {
-          if (key === "name") return a.name.localeCompare(b.name)
-          else if (key === "fridges") return a.fridges.length - b.fridges.length
-          else if (key === "temperature") {
-            const avgTempA = this.getAverageTemperature(a)
-            const avgTempB = this.getAverageTemperature(b)
-            return avgTempA - avgTempB
-          }
-        })
-      } else {
-        this.filteredShops.sort((a, b) => {
-          if (key === "name") return b.name.localeCompare(a.name)
-          else if (key === "fridges") return b.fridges.length - a.fridges.length
-          else if (key === "temperature") {
-            const avgTempA = this.getAverageTemperature(a)
-            const avgTempB = this.getAverageTemperature(b)
-            return avgTempB - avgTempA
-          }
-        })
+      return {
+        ...shop,
+        fridges: filteredFridges,
       }
-    },
-    getAverageTemperature(shop) {
-      let totalTemp = 0
-      let count = 0
+    })
+    .filter((shop) => shop.fridges.length > 0)
 
-      shop.fridges.forEach((fridge) => {
-        fridge.probes.forEach((probe) => {
-          totalTemp += probe.temperatures[probe.temperatures.length - 1].value
-          count++
-        })
-      })
+  filteredShops.value = filteredShops.value.filter((shop) =>
+    shop.name.toLowerCase().includes(search.value.toLowerCase())
+  )
 
-      return totalTemp / count
-    },
-    showModal(probe) {
-      this.selectedFridge = probe
-      this.showProbeChart = true
-    },
-    hideModal() {
-      this.selectedFridge = null
-      this.showProbeChart = false
-    },
-  },
+  sortShops()
 }
+
+// Sort shops
+const sortShops = () => {
+  const key = sortKey.value
+  const order = sortOrder.value
+  // filter depending on order
+  if (order === "asc") {
+    filteredShops.value.sort((a, b) => {
+      if (key === "name") return a.name.localeCompare(b.name)
+      else if (key === "fridges") return a.fridges.length - b.fridges.length
+      else if (key === "temperature") {
+        const avgTempA = getAverageTemperature(a)
+        const avgTempB = getAverageTemperature(b)
+        return avgTempA - avgTempB
+      }
+    })
+  } else {
+    filteredShops.value.sort((a, b) => {
+      if (key === "name") return b.name.localeCompare(a.name)
+      else if (key === "fridges") return b.fridges.length - a.fridges.length
+      else if (key === "temperature") {
+        const avgTempA = getAverageTemperature(a)
+        const avgTempB = getAverageTemperature(b)
+        return avgTempB - avgTempA
+      }
+    })
+  }
+}
+
+// Calculate average temperature
+const getAverageTemperature = (shop) => {
+  let totalTemp = 0
+  let count = 0
+
+  shop.fridges.forEach((fridge) => {
+    fridge.probes.forEach((probe) => {
+      totalTemp += probe.temperatures[probe.temperatures.length - 1].value
+      count++
+    })
+  })
+
+  return totalTemp / count
+}
+
+// Modal visibility
+const showModal = (probe) => {
+  selectedFridge.value = probe
+  showProbeChart.value = true
+}
+
+const hideModal = () => {
+  selectedFridge.value = null
+  showProbeChart.value = false
+}
+
+// Chart options computed property
+const chatOptions = computed(() => ({
+  chart: {
+    type: "line",
+  },
+  xaxis: {
+    categories: selectedFridge.value?.probes[0].temperatures.map(
+      (temperature) => temperature.date
+    ),
+  },
+  annotations: {
+    yaxis: [
+      {
+        y: 0,
+        y2: 10,
+        borderColor: "#000",
+        fillColor: "#bbf7d0",
+        opacity: 0.4,
+      },
+      {
+        y: 10,
+        y2: 15,
+        borderColor: "#000",
+        fillColor: "#fef08a",
+        opacity: 0.4,
+      },
+      {
+        y: 15,
+        y2: 20,
+        borderColor: "#000",
+        fillColor: "#fecaca",
+        opacity: 0.4,
+      },
+    ],
+  },
+}))
+
+// Watchers
+watch([search, sortKey, sortOrder], () => {
+  applyFiltersAndSort()
+})
+
+// Toggle filter
+const toggleFilter = (color) => {
+  filters.value[color] = !filters.value[color]
+  applyFiltersAndSort()
+}
+
+// Fetch shops on mount
+onMounted(() => {
+  fetchShops()
+})
 </script>
 
 <style>
