@@ -476,27 +476,29 @@ const saveProbe = async () => {
 const applyFiltersAndSort = () => {
   filteredShops.value = shops.value
     .map((shop) => {
-      const filteredmachines = shop.machines
-        .map((fridge) => {
-          const filteredProbes = fridge.sondes.filter((probe) => {
-            let lastTemperature =
-              probe.mesures[probe.mesures.length - 1]?.temperature
+      const filteredmachines = shop.passerelles.map((gateway) =>
+        gateway.machines
+          .map((fridge) => {
+            const filteredProbes = fridge.sondes.filter((probe) => {
+              let lastTemperature =
+                probe.mesures[probe.mesures.length - 1]?.temperature
 
-            return (
-              (filters.value.red && lastTemperature > 15) ||
-              (filters.value.yellow &&
-                lastTemperature > 10 &&
-                lastTemperature <= 15) ||
-              (filters.value.green && lastTemperature <= 10)
-            )
+              return (
+                (filters.value.red && lastTemperature > 15) ||
+                (filters.value.yellow &&
+                  lastTemperature > 10 &&
+                  lastTemperature <= 15) ||
+                (filters.value.green && lastTemperature <= 10)
+              )
+            })
+
+            return {
+              ...fridge,
+              sondes: filteredProbes,
+            }
           })
-
-          return {
-            ...fridge,
-            sondes: filteredProbes,
-          }
-        })
-        .filter((fridge) => fridge.sondes.length > 0)
+          .filter((fridge) => fridge.sondes.length > 0)
+      )
 
       return {
         ...shop,
