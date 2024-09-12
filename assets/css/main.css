@@ -59,7 +59,7 @@ html {
 }
 
 .btn {
-  @apply text-white rounded-lg p-2;
+  @apply text-white rounded-lg px-2 py-1;
 }
 
 .btn-primary {

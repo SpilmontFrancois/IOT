@@ -9,8 +9,9 @@
         </div>
 
         <div class="w-1/3 flex justify-end">
-          <button class="btn-primary" @click="showAddShop = true">
-            Ajouter un magasin
+          <button class="btn-primary space-x-2" @click="showAddShop = true">
+            <fa-icon :icon="['fas', 'plus']" />
+            <span>Ajouter un magasin</span>
           </button>
         </div>
       </div>
@@ -39,8 +40,8 @@
                         gateway.machines.filter((fridge) =>
                           fridge.sondes.some(
                             (probe) =>
-                              probe.mesures[probe.mesures.length - 1]?.value >
-                              15
+                              probe.mesures[probe.mesures.length - 1]
+                                ?.temperature > 15
                           )
                         ).length,
                       0
@@ -70,15 +71,15 @@
                           (fridge) =>
                             fridge.sondes.some(
                               (probe) =>
-                                probe.mesures[probe.mesures.length - 1]?.value >
-                                  10 &&
                                 probe.mesures[probe.mesures.length - 1]
-                                  ?.value <= 15
+                                  ?.temperature > 10 &&
+                                probe.mesures[probe.mesures.length - 1]
+                                  ?.temperature <= 15
                             ) &&
                             !fridge.sondes.some(
                               (probe) =>
-                                probe.mesures[probe.mesures.length - 1]?.value >
-                                15
+                                probe.mesures[probe.mesures.length - 1]
+                                  ?.temperature > 15
                             )
                         ).length,
                       0
@@ -107,8 +108,8 @@
                         gateway.machines.filter((fridge) =>
                           fridge.sondes.every(
                             (probe) =>
-                              probe.mesures[probe.mesures.length - 1]?.value <=
-                              10
+                              probe.mesures[probe.mesures.length - 1]
+                                ?.temperature <= 10
                           )
                         ).length,
                       0
@@ -158,101 +159,119 @@
       />
     </div>
 
-    <div v-if="filteredShops.length > 0" class="grid grid-cols-5 gap-4">
+    <div v-if="filteredShops.length > 0" class="grid grid-cols-4 gap-4">
       <div v-for="shop in filteredShops" :key="shop.id" class="card">
-        <span class="text-lg">
-          {{ shop.name }} (T° moy. :
-          {{ getAverageTemperature(shop).toFixed(1) }}°C)
-        </span>
+        <div class="flex items-center justify-between w-full">
+          <span class="text-lg">
+            {{ shop.name }} (T° moy. :
+            {{ getAverageTemperature(shop).toFixed(1) }}°C)
+          </span>
 
-        <button class="btn-primary" @click="showModalMachine(shop)">+</button>
+          <button class="btn-primary" @click="showModalMachine(shop)">
+            <fa-icon :icon="['fas', 'plus']" />
+          </button>
+        </div>
 
         <div
-          v-if="shop.passerelles.length > 0"
-          class="grid grid-cols-2 gap-2 w-full"
+          v-for="passerelle in shop.passerelles"
+          :key="passerelle.id"
+          class="border rounded p-1 w-full"
         >
-          <div
-            v-for="fridge in shop.passerelles[0].machines"
-            :key="fridge.id"
-            class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors duration-300 ease-in-out"
-            :class="{
-              'bg-gray-200': fridge.showProbes,
-              'bg-red-200':
-                !fridge.showProbes &&
-                fridge.sondes.some(
-                  (probe) => probe.mesures[probe.mesures.length - 1]?.value > 15
-                ),
-              'bg-yellow-200':
-                !fridge.showProbes &&
-                fridge.sondes.some(
-                  (probe) =>
-                    probe.mesures[probe.mesures.length - 1]?.value > 10 &&
-                    probe.mesures[probe.mesures.length - 1]?.value <= 15
-                ) &&
-                !fridge.sondes.some(
-                  (probe) => probe.mesures[probe.mesures.length - 1]?.value > 15
-                ),
-              'bg-green-200':
-                !fridge.showProbes &&
-                fridge.sondes.every(
-                  (probe) =>
-                    probe.mesures[probe.mesures.length - 1]?.value <= 10
-                ),
-            }"
-            @mouseover="fridge.showProbes = true"
-            @mouseleave="fridge.showProbes = false"
-            @click="showModal(fridge)"
-          >
-            <button class="btn-primary" @click.stop="showModalProbe(fridge)">
-              +
-            </button>
+          <span> Passerelle : {{ passerelle.name }} </span>
 
-            <div class="flex items-center justify-between w-full">
-              <div />
-              <span>
-                {{ fridge.name }}
-              </span>
-              <fa-icon
-                :icon="['fas', 'chevron-down']"
-                class="transition-transform duration-300"
-                :class="{ 'transform rotate-180': fridge.showProbes }"
-              />
-            </div>
+          <div class="grid grid-cols-2 gap-2 w-full">
+            <div
+              v-for="fridge in passerelle.machines"
+              :key="fridge.id"
+              class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors duration-300 ease-in-out"
+              :class="{
+                'bg-gray-200': fridge.showProbes,
+                'bg-red-200':
+                  !fridge.showProbes &&
+                  fridge.sondes.some(
+                    (probe) =>
+                      probe.mesures[probe.mesures.length - 1]?.temperature > 15
+                  ),
+                'bg-yellow-200':
+                  !fridge.showProbes &&
+                  fridge.sondes.some(
+                    (probe) =>
+                      probe.mesures[probe.mesures.length - 1]?.temperature >
+                        10 &&
+                      probe.mesures[probe.mesures.length - 1]?.temperature <= 15
+                  ) &&
+                  !fridge.sondes.some(
+                    (probe) =>
+                      probe.mesures[probe.mesures.length - 1]?.temperature > 15
+                  ),
+                'bg-green-200':
+                  !fridge.showProbes &&
+                  fridge.sondes.every(
+                    (probe) =>
+                      probe.mesures[probe.mesures.length - 1]?.temperature <= 10
+                  ),
+              }"
+              @mouseover="fridge.showProbes = true"
+              @mouseleave="fridge.showProbes = false"
+              @click="showModal(fridge)"
+            >
+              <button class="btn-primary" @click.stop="showModalProbe(fridge)">
+                <fa-icon :icon="['fas', 'plus']" />
+              </button>
 
-            <transition name="expand">
-              <div
-                v-show="fridge.showProbes"
-                class="flex flex-col space-y-1 w-full overflow-hidden"
-                style="transition: max-height 0.3s ease, opacity 0.3s ease"
-                :style="{
-                  maxHeight: fridge.showProbes ? '500px' : '0',
-                  opacity: fridge.showProbes ? '1' : '0',
-                }"
-              >
+              <div class="flex items-center justify-between w-full">
+                <div />
+                <span>
+                  {{ fridge.name }}
+                </span>
+                <fa-icon
+                  :icon="['fas', 'chevron-down']"
+                  class="transition-transform duration-300"
+                  :class="{ 'transform rotate-180': fridge.showProbes }"
+                />
+              </div>
+
+              <transition name="expand">
                 <div
-                  v-for="probe in fridge.sondes"
-                  :key="probe.id"
-                  class="rounded-md py-1 px-2 transition-colors"
-                  :class="{
-                    'bg-red-200':
-                      probe.mesures[probe.mesures.length - 1]?.value > 15,
-                    'bg-yellow-200':
-                      probe.mesures[probe.mesures.length - 1]?.value > 10 &&
-                      probe.mesures[probe.mesures.length - 1]?.value <= 15,
-                    'bg-green-200':
-                      probe.mesures[probe.mesures.length - 1]?.value <= 10,
+                  v-show="fridge.showProbes"
+                  class="flex flex-col space-y-1 w-full overflow-hidden"
+                  style="transition: max-height 0.3s ease, opacity 0.3s ease"
+                  :style="{
+                    maxHeight: fridge.showProbes ? '500px' : '0',
+                    opacity: fridge.showProbes ? '1' : '0',
                   }"
                 >
-                  <div class="flex items-center space-x-2">
-                    <fa-icon :icon="['fas', 'thermometer-half']" />
-                    <span>
-                      {{ probe.name }} :
-                      {{ probe.mesures[probe.mesures.length - 1]?.value }}°C
-                    </span>
+                  <div
+                    v-for="probe in fridge.sondes"
+                    :key="probe.id"
+                    class="rounded-md py-1 px-2 transition-colors"
+                    :class="{
+                      'bg-red-200':
+                        probe.mesures[probe.mesures.length - 1]?.temperature >
+                        15,
+                      'bg-yellow-200':
+                        probe.mesures[probe.mesures.length - 1]?.temperature >
+                          10 &&
+                        probe.mesures[probe.mesures.length - 1]?.temperature <=
+                          15,
+                      'bg-green-200':
+                        probe.mesures[probe.mesures.length - 1]?.temperature <=
+                        10,
+                    }"
+                  >
+                    <div class="flex items-center space-x-2">
+                      <fa-icon :icon="['fas', 'thermometer-half']" />
+                      <span>
+                        {{ probe.name }} :
+                        {{
+                          probe.mesures[probe.mesures.length - 1]?.temperature
+                        }}°C
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </transition>
+              </transition>
+            </div>
           </div>
         </div>
       </div>
@@ -267,7 +286,7 @@
       :series="
         selectedFridge.sondes.map((probe) => ({
           name: probe.name,
-          data: probe.mesures.map((temperature) => temperature.value),
+          data: probe.mesures.map((temperature) => temperature.temperature),
         }))
       "
       :options="chatOptions"
@@ -410,19 +429,6 @@ const saveShop = async () => {
     body: JSON.stringify(newShop.value),
   })
 
-  await $fetch(`${config.public.API_URL}/passerelle/passerelle`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${config.public.API_TOKEN}`,
-    },
-    body: JSON.stringify({
-      name: newShop.value.name,
-      idPhysique: newShop.value.name,
-      magasinId: data.id,
-    }),
-  })
-
   showAddShop.value = false
 
   fetchShops()
@@ -473,7 +479,8 @@ const applyFiltersAndSort = () => {
       const filteredmachines = shop.machines
         .map((fridge) => {
           const filteredProbes = fridge.sondes.filter((probe) => {
-            let lastTemperature = probe.mesures[probe.mesures.length - 1]?.value
+            let lastTemperature =
+              probe.mesures[probe.mesures.length - 1]?.temperature
 
             return (
               (filters.value.red && lastTemperature > 15) ||
@@ -541,8 +548,10 @@ const getAverageTemperature = (shop) => {
   shop.passerelles.forEach((gateway) => {
     gateway.machines.forEach((fridge) => {
       fridge.sondes.forEach((probe) => {
-        totalTemp += probe.mesures[probe.mesures.length - 1]?.value
-        count++
+        probe.mesures.forEach((mesure) => {
+          totalTemp += mesure.temperature
+          count++
+        })
       })
     })
   })

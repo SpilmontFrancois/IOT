@@ -16,7 +16,7 @@ export default defineNuxtConfig({
     component: "fa",
     suffix: true,
     icons: {
-      solid: ["times", "thermometer-half", "chevron-down"],
+      solid: ["times", "thermometer-half", "chevron-down", "add"],
     },
   },
 
