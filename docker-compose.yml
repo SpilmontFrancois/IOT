@@ -1,0 +1,59 @@
+version: '3.1'
+
+services:
+  # On utilise traefik pour faire un reverse proxy (Récupèrer les connexions entrantes
+  # et les rediriger vers le bon service), il permet également l'obtention de certificat
+  # à l'aide de letsEncrypt, attention à modifier votre fichier .env
+  reverse-proxy:
+    image: traefik:latest
+    container_name: "traefik"
+    command:
+      # - "--log.level=DEBUG"
+      - "--api.insecure=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+      - "--entrypoints.web.http.redirections.entryPoint.to=websecure"
+      - "--entrypoints.web.http.redirections.entryPoint.scheme=https"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      - "--certificatesresolvers.myresolver.acme.email=toto@toto.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
+
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - "./letsencrypt:/letsencrypt"
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    restart: always
+
+  ## Service utilisé au démarrage uniquement pour installer les dépendances nécessaires
+  ## au fonctionnement de notre backend
+  installFrontend:
+    image: node
+    working_dir: /app
+    volumes:
+      - .:/app
+    command: "yarn install"
+
+  # On utilise une image de node, on mappe notre applicatif dans le /app du conteneur
+  # On execute le script dev (--host permet de répondre à autre chose que localhost) de notre package json (vitejs)
+  # Grace à traefik on a un reverse proxy sur le nom de domaine du frontend (.env)
+  # On obtient le certificat, on redirige le flux vers le port 3000 du conteneur
+  frontend:
+    image: node
+    restart: always
+    working_dir: /app
+    volumes:
+      - .:/app
+    environment:
+      BACKEND_URL: $BACKEND_URL
+    command: "yarn dev --host"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`$FRONTEND_URL`)"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+      - "traefik.http.routers.frontend.service=frontendService"
+      - "traefik.http.services.frontendService.loadBalancer.server.port=3000"
