@@ -309,7 +309,9 @@
       <template #footer="{ slotScope }">
         <div class="flex justify-center mt-5 items-center space-x-5">
           <button class="btn-danger" @click="slotScope()">Annuler</button>
-          <button class="btn-primary" @click="saveShop">Enregistrer</button>
+          <button class="btn-primary" @click="saveShop(slotScope)">
+            Enregistrer
+          </button>
         </div>
       </template>
     </Modal>
@@ -335,7 +337,9 @@
       <template #footer="{ slotScope }">
         <div class="flex justify-center mt-5 items-center space-x-5">
           <button class="btn-danger" @click="slotScope()">Annuler</button>
-          <button class="btn-primary" @click="saveMachine">Enregistrer</button>
+          <button class="btn-primary" @click="saveMachine(slotScope)">
+            Enregistrer
+          </button>
         </div>
       </template>
     </Modal>
@@ -356,7 +360,9 @@
       <template #footer="{ slotScope }">
         <div class="flex justify-center mt-5 items-center space-x-5">
           <button class="btn-danger" @click="slotScope()">Annuler</button>
-          <button class="btn-primary" @click="saveProbe">Enregistrer</button>
+          <button class="btn-primary" @click="saveProbe(slotScope)">
+            Enregistrer
+          </button>
         </div>
       </template>
     </Modal>
@@ -419,7 +425,7 @@ const fetchShops = async () => {
   filteredShops.value = shops.value
 }
 
-const saveShop = async () => {
+const saveShop = async (slotScope) => {
   const data = await $fetch(`${config.public.API_URL}/magasin/magasin`, {
     method: "POST",
     headers: {
@@ -430,11 +436,12 @@ const saveShop = async () => {
   })
 
   showAddShop.value = false
+  slotScope()
 
   fetchShops()
 }
 
-const saveMachine = async () => {
+const saveMachine = async (slotScope) => {
   await $fetch(`${config.public.API_URL}/machine/machine`, {
     method: "POST",
     headers: {
@@ -449,11 +456,12 @@ const saveMachine = async () => {
   })
 
   showAddMachine.value = false
+  slotScope()
 
   fetchShops()
 }
 
-const saveProbe = async () => {
+const saveProbe = async (slotScope) => {
   const data = await $fetch(`${config.public.API_URL}/sonde/sonde`, {
     method: "POST",
     headers: {
@@ -468,6 +476,7 @@ const saveProbe = async () => {
   })
 
   showAddProbe.value = false
+  slotScope()
 
   fetchShops()
 }
