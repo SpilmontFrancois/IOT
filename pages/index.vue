@@ -1,7 +1,19 @@
 <template>
   <div class="flex flex-col space-y-6">
     <div class="card">
-      <span class="text-xl font-semibold">Liste des magasins</span>
+      <div class="flex justify-between w-full">
+        <div class="w-1/3" />
+
+        <div class="w-1/3 flex items-center justify-center">
+          <span class="text-xl font-semibold">Liste des magasins</span>
+        </div>
+
+        <div class="w-1/3 flex justify-end">
+          <button class="btn-primary" @click="showAddShop = true">
+            Ajouter un magasin
+          </button>
+        </div>
+      </div>
     </div>
 
     <div class="flex space-x-6">
@@ -21,13 +33,18 @@
                 shops.reduce(
                   (acc, shop) =>
                     acc +
-                    shop.fridges.filter((fridge) =>
-                      fridge.probes.some(
-                        (probe) =>
-                          probe.temperatures[probe.temperatures.length - 1]
-                            .value > 15
-                      )
-                    ).length,
+                    shop.passerelles.reduce(
+                      (acc, gateway) =>
+                        acc +
+                        gateway.machines.filter((fridge) =>
+                          fridge.probes.some(
+                            (probe) =>
+                              probe.temperatures[probe.temperatures.length - 1]
+                                .value > 15
+                          )
+                        ).length,
+                      0
+                    ),
                   0
                 )
               }}
@@ -46,21 +63,29 @@
                 shops.reduce(
                   (acc, shop) =>
                     acc +
-                    shop.fridges.filter(
-                      (fridge) =>
-                        fridge.probes.some(
-                          (probe) =>
-                            probe.temperatures[probe.temperatures.length - 1]
-                              .value > 10 &&
-                            probe.temperatures[probe.temperatures.length - 1]
-                              .value <= 15
-                        ) &&
-                        !fridge.probes.some(
-                          (probe) =>
-                            probe.temperatures[probe.temperatures.length - 1]
-                              .value > 15
-                        )
-                    ).length,
+                    shop.passerelles.reduce(
+                      (acc, gateway) =>
+                        acc +
+                        gateway.machines.filter(
+                          (fridge) =>
+                            fridge.probes.some(
+                              (probe) =>
+                                probe.temperatures[
+                                  probe.temperatures.length - 1
+                                ].value > 10 &&
+                                probe.temperatures[
+                                  probe.temperatures.length - 1
+                                ].value <= 15
+                            ) &&
+                            !fridge.probes.some(
+                              (probe) =>
+                                probe.temperatures[
+                                  probe.temperatures.length - 1
+                                ].value > 15
+                            )
+                        ).length,
+                      0
+                    ),
                   0
                 )
               }}
@@ -79,13 +104,18 @@
                 shops.reduce(
                   (acc, shop) =>
                     acc +
-                    shop.fridges.filter((fridge) =>
-                      fridge.probes.every(
-                        (probe) =>
-                          probe.temperatures[probe.temperatures.length - 1]
-                            .value <= 10
-                      )
-                    ).length,
+                    shop.passerelles.reduce(
+                      (acc, gateway) =>
+                        acc +
+                        gateway.machines.filter((fridge) =>
+                          fridge.probes.every(
+                            (probe) =>
+                              probe.temperatures[probe.temperatures.length - 1]
+                                .value <= 10
+                          )
+                        ).length,
+                      0
+                    ),
                   0
                 )
               }}
@@ -105,7 +135,7 @@
             class="select"
           >
             <option value="name">Nom</option>
-            <option value="fridges">Nombre de réfrigérateurs</option>
+            <option value="machines">Nombre de réfrigérateurs</option>
             <option value="temperature">Température moyenne</option>
           </select>
 
@@ -131,7 +161,7 @@
       />
     </div>
 
-    <div v-if="filteredShops.length" class="grid grid-cols-5 gap-4">
+    <div v-if="filteredShops.length > 0" class="grid grid-cols-5 gap-4">
       <div v-for="shop in filteredShops" :key="shop.id" class="card">
         <span class="text-lg">
           {{ shop.name }} (T° moy. :
@@ -140,7 +170,7 @@
 
         <div class="grid grid-cols-2 gap-2 w-full">
           <div
-            v-for="fridge in shop.fridges"
+            v-for="fridge in shop.machines"
             :key="fridge.id"
             class="flex flex-col items-center justify-center rounded-md cursor-pointer py-1 px-2 h-fit transition-colors duration-300 ease-in-out"
             :class="{
@@ -248,6 +278,27 @@
       :options="chatOptions"
       @close="hideModal()"
     />
+
+    <Modal
+      v-if="showAddShop"
+      title="Ajouter un magasin"
+      :class="'w-1/3'"
+      @close="showAddShop = false"
+    >
+      <template #body>
+        <div class="flex flex-col space-y-1 text-gray-500 w-full">
+          <label for="name">Nom du magasin</label>
+          <input v-model="newShop.name" type="text" id="name" class="input" />
+        </div>
+      </template>
+
+      <template #footer="{ slotScope }">
+        <div class="flex justify-center mt-5 items-center space-x-5">
+          <button class="btn-danger" @click="slotScope()">Annuler</button>
+          <button class="btn-primary" @click="saveShop">Enregistrer</button>
+        </div>
+      </template>
+    </Modal>
   </div>
 </template>
 
@@ -269,67 +320,67 @@ const sortKey = ref("name")
 const sortOrder = ref("asc")
 const showProbeChart = ref(false)
 const selectedFridge = ref(null)
+const showAddShop = ref(false)
+const newShop = ref({
+  name: "",
+})
 
 // Fetch the shops data
 const fetchShops = async () => {
-  const data = await $fetch(
-    `${config.public.API_URL}/magasin/magasin`,
-    {
-      headers: {
-        Authorization: `Bearer ${config.public.API_TOKEN}`,
-      },
-    }
-  ).then((res) => res.json())
+  const { data } = await $fetch(`${config.public.API_URL}/magasin/magasin`, {
+    headers: {
+      Authorization: `Bearer ${config.public.API_TOKEN}`,
+    },
+  })
   console.log(data)
 
-  // for (let i = 0; i < 10; i++) {
-  //   let shop = {
-  //     id: i,
-  //     name: `Magasin ${i}`,
-  //     fridges: [],
-  //   }
+  data.forEach((shop) => {
+    shop.passerelles.forEach((gateway) => {
+      gateway.machines.forEach((fridge) => {
+        fridge.probes.forEach((probe) => {
+          probe.temperatures.sort((a, b) => new Date(a.date) - new Date(b.date))
+        })
+      })
+    })
+  })
 
-  //   for (let j = 0; j < 5; j++) {
-  //     shop.fridges.push({
-  //       id: `${i}-${j}`,
-  //       name: `Frigo ${j}`,
-  //       probes: [],
-  //       showProbes: false,
-  //     })
-
-  //     for (let k = 0; k < 2; k++) {
-  //       shop.fridges[j].probes.push({
-  //         id: `${i}-${j}-${k}`,
-  //         name: `Sonde ${k}`,
-  //         temperatures: Array.from({ length: 20 }, () => ({
-  //           date: new Date(
-  //             new Date().setHours(
-  //               new Date().getHours() - Math.floor(Math.random() * 24)
-  //             )
-  //           ).toISOString(),
-  //           value: Math.floor(Math.random() * 20),
-  //         })),
-  //       })
-  //     }
-  //   }
-
-  //   shop.fridges.forEach((fridge) => {
-  //     fridge.probes.forEach((probe) => {
-  //       probe.temperatures.sort((a, b) => new Date(a.date) - new Date(b.date))
-  //     })
-  //   })
-
-  //   shops.value.push(shop)
-  // }
-
+  shops.value = data
   filteredShops.value = shops.value
+}
+
+const saveShop = async () => {
+  const data = await $fetch(`${config.public.API_URL}/magasin/magasin`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.public.API_TOKEN}`,
+    },
+    body: JSON.stringify(newShop.value),
+  })
+
+  await $fetch(`${config.public.API_URL}/passerelle/passerelle`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${config.public.API_TOKEN}`,
+    },
+    body: JSON.stringify({
+      name: newShop.value.name,
+      idPhysique: newShop.value.name,
+      magasinId: data.id,
+    }),
+  })
+
+  showAddShop.value = false
+
+  fetchShops()
 }
 
 // Apply filters and sort
 const applyFiltersAndSort = () => {
   filteredShops.value = shops.value
     .map((shop) => {
-      const filteredFridges = shop.fridges
+      const filteredmachines = shop.machines
         .map((fridge) => {
           const filteredProbes = fridge.probes.filter((probe) => {
             let lastTemperature =
@@ -353,10 +404,10 @@ const applyFiltersAndSort = () => {
 
       return {
         ...shop,
-        fridges: filteredFridges,
+        machines: filteredmachines,
       }
     })
-    .filter((shop) => shop.fridges.length > 0)
+    .filter((shop) => shop.machines.length > 0)
 
   filteredShops.value = filteredShops.value.filter((shop) =>
     shop.name.toLowerCase().includes(search.value.toLowerCase())
@@ -373,7 +424,7 @@ const sortShops = () => {
   if (order === "asc") {
     filteredShops.value.sort((a, b) => {
       if (key === "name") return a.name.localeCompare(b.name)
-      else if (key === "fridges") return a.fridges.length - b.fridges.length
+      else if (key === "machines") return a.machines.length - b.machines.length
       else if (key === "temperature") {
         const avgTempA = getAverageTemperature(a)
         const avgTempB = getAverageTemperature(b)
@@ -383,7 +434,7 @@ const sortShops = () => {
   } else {
     filteredShops.value.sort((a, b) => {
       if (key === "name") return b.name.localeCompare(a.name)
-      else if (key === "fridges") return b.fridges.length - a.fridges.length
+      else if (key === "machines") return b.machines.length - a.machines.length
       else if (key === "temperature") {
         const avgTempA = getAverageTemperature(a)
         const avgTempB = getAverageTemperature(b)
@@ -398,10 +449,12 @@ const getAverageTemperature = (shop) => {
   let totalTemp = 0
   let count = 0
 
-  shop.fridges.forEach((fridge) => {
-    fridge.probes.forEach((probe) => {
-      totalTemp += probe.temperatures[probe.temperatures.length - 1].value
-      count++
+  shop.passerelles.forEach((gateway) => {
+    gateway.machines.forEach((fridge) => {
+      fridge.probes.forEach((probe) => {
+        totalTemp += probe.temperatures[probe.temperatures.length - 1].value
+        count++
+      })
     })
   })
 

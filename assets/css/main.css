@@ -57,3 +57,15 @@ html {
 .select {
   @apply border-2 border-gray-300 rounded-lg p-2 w-full;
 }
+
+.btn {
+  @apply text-white rounded-lg p-2;
+}
+
+.btn-primary {
+  @apply btn bg-blue;
+}
+
+.btn-danger {
+  @apply btn bg-red;
+}
