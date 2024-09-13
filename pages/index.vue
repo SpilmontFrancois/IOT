@@ -460,6 +460,8 @@ const fetchShops = async () => {
 
   shops.value = data
   applyFiltersAndSort()
+
+  setInterval(fetchShops, 60000) // Fetch shops every minute
 }
 
 const saveShop = async (slotScope) => {
