@@ -121,7 +121,6 @@
             class="select"
           >
             <option value="name">Nom</option>
-            <option value="machines">Nombre de réfrigérateurs</option>
             <option value="temperature">Température moyenne</option>
           </select>
 
@@ -557,18 +556,6 @@ const sortShops = () => {
       return order === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name)
-    } else if (key === "machines") {
-      const machinesCountA = a.passerelles.reduce(
-        (acc, gateway) => acc + gateway.length,
-        0
-      )
-      const machinesCountB = b.passerelles.reduce(
-        (acc, gateway) => acc + gateway.length,
-        0
-      )
-      return order === "asc"
-        ? machinesCountA - machinesCountB
-        : machinesCountB - machinesCountA
     } else if (key === "temperature") {
       const avgTempA = getAverageTemperature(a)
       const avgTempB = getAverageTemperature(b)
