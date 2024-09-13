@@ -69,3 +69,16 @@ html {
 .btn-danger {
   @apply btn bg-red;
 }
+
+.expand-enter-active,
+.expand-leave-active {
+  transition: all 0.3s ease;
+}
+
+.expand-enter,
+.expand-leave-to
+
+/* .expand-leave-active in <2.1.8 */ {
+  opacity: 0;
+  max-height: 0;
+}

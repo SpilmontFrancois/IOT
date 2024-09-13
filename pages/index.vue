@@ -22,11 +22,7 @@
         <span class="text-lg font-semibold">Filtres</span>
 
         <div class="flex items-center justify-evenly w-full">
-          <div
-            class="flex items-center space-x-2 cursor-pointer"
-            :class="{ 'opacity-50': !filters.red }"
-            @click="toggleFilter('red')"
-          >
+          <div class="flex items-center space-x-2">
             <div
               class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-red-200"
             >
@@ -52,11 +48,7 @@
             </div>
             <span>Température > 15°C</span>
           </div>
-          <div
-            class="flex items-center space-x-2 cursor-pointer"
-            :class="{ 'opacity-50': !filters.yellow }"
-            @click="toggleFilter('yellow')"
-          >
+          <div class="flex items-center space-x-2">
             <div
               class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-yellow-200"
             >
@@ -90,11 +82,7 @@
             </div>
             <span>Température > 10°C et ≤ 15°C</span>
           </div>
-          <div
-            class="flex items-center space-x-2 cursor-pointer"
-            :class="{ 'opacity-50': !filters.green }"
-            @click="toggleFilter('green')"
-          >
+          <div class="flex items-center space-x-2">
             <div
               class="flex items-center justify-center rounded-full h-8 w-8 font-semibold bg-green-200"
             >
@@ -305,7 +293,7 @@
           data: probe.mesures.map((temperature) => temperature.temperature),
         }))
       "
-      :options="chatOptions"
+      :options="chartOptions"
       @close="hideModal()"
     />
 
@@ -421,11 +409,6 @@ const config = useRuntimeConfig()
 // Reactive state
 const shops = ref([])
 const filteredShops = ref([])
-const filters = ref({
-  red: true,
-  yellow: true,
-  green: true,
-})
 const search = ref("")
 const sortKey = ref("name")
 const sortOrder = ref("asc")
@@ -460,12 +443,15 @@ const fetchShops = async () => {
       Authorization: `Bearer ${config.public.API_TOKEN}`,
     },
   })
-  console.log(data)
 
   data.forEach((shop) => {
     shop.passerelles.forEach((gateway) => {
       gateway.machines.forEach((fridge) => {
         fridge.sondes.forEach((probe) => {
+          probe.mesures.forEach((measure) => {
+            const date = new Date(measure.date)
+            measure.date = `${date.getDate()}/${date.getMonth()}/${date.getFullYear()} ${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+          })
           probe.mesures.sort((a, b) => new Date(a.date) - new Date(b.date))
         })
       })
@@ -473,7 +459,7 @@ const fetchShops = async () => {
   })
 
   shops.value = data
-  filteredShops.value = shops.value
+  applyFiltersAndSort()
 }
 
 const saveShop = async (slotScope) => {
@@ -488,7 +474,6 @@ const saveShop = async (slotScope) => {
 
   showAddShop.value = false
   slotScope()
-
   fetchShops()
 }
 
@@ -506,9 +491,8 @@ const savePasserelle = async (slotScope) => {
     }),
   })
 
-  showAddMachine.value = false
+  showAddPasserelle.value = false
   slotScope()
-
   fetchShops()
 }
 
@@ -528,7 +512,6 @@ const saveMachine = async (slotScope) => {
 
   showAddMachine.value = false
   slotScope()
-
   fetchShops()
 }
 
@@ -548,44 +531,12 @@ const saveProbe = async (slotScope) => {
 
   showAddProbe.value = false
   slotScope()
-
   fetchShops()
 }
 
 // Apply filters and sort
 const applyFiltersAndSort = () => {
   filteredShops.value = shops.value
-    .map((shop) => {
-      const filteredmachines = shop.passerelles.map((gateway) =>
-        gateway.machines
-          .map((fridge) => {
-            const filteredProbes = fridge.sondes.filter((probe) => {
-              let lastTemperature =
-                probe.mesures[probe.mesures.length - 1]?.temperature
-
-              return (
-                (filters.value.red && lastTemperature > 15) ||
-                (filters.value.yellow &&
-                  lastTemperature > 10 &&
-                  lastTemperature <= 15) ||
-                (filters.value.green && lastTemperature <= 10)
-              )
-            })
-
-            return {
-              ...fridge,
-              sondes: filteredProbes,
-            }
-          })
-          .filter((fridge) => fridge.sondes.length > 0)
-      )
-
-      return {
-        ...shop,
-        machines: filteredmachines,
-      }
-    })
-    .filter((shop) => shop.machines.length > 0)
 
   filteredShops.value = filteredShops.value.filter((shop) =>
     shop.name.toLowerCase().includes(search.value.toLowerCase())
@@ -598,28 +549,30 @@ const applyFiltersAndSort = () => {
 const sortShops = () => {
   const key = sortKey.value
   const order = sortOrder.value
-  // filter depending on order
-  if (order === "asc") {
-    filteredShops.value.sort((a, b) => {
-      if (key === "name") return a.name.localeCompare(b.name)
-      else if (key === "machines") return a.machines.length - b.machines.length
-      else if (key === "temperature") {
-        const avgTempA = getAverageTemperature(a)
-        const avgTempB = getAverageTemperature(b)
-        return avgTempA - avgTempB
-      }
-    })
-  } else {
-    filteredShops.value.sort((a, b) => {
-      if (key === "name") return b.name.localeCompare(a.name)
-      else if (key === "machines") return b.machines.length - a.machines.length
-      else if (key === "temperature") {
-        const avgTempA = getAverageTemperature(a)
-        const avgTempB = getAverageTemperature(b)
-        return avgTempB - avgTempA
-      }
-    })
-  }
+
+  filteredShops.value.sort((a, b) => {
+    if (key === "name") {
+      return order === "asc"
+        ? a.name.localeCompare(b.name)
+        : b.name.localeCompare(a.name)
+    } else if (key === "machines") {
+      const machinesCountA = a.passerelles.reduce(
+        (acc, gateway) => acc + gateway.length,
+        0
+      )
+      const machinesCountB = b.passerelles.reduce(
+        (acc, gateway) => acc + gateway.length,
+        0
+      )
+      return order === "asc"
+        ? machinesCountA - machinesCountB
+        : machinesCountB - machinesCountA
+    } else if (key === "temperature") {
+      const avgTempA = getAverageTemperature(a)
+      const avgTempB = getAverageTemperature(b)
+      return order === "asc" ? avgTempA - avgTempB : avgTempB - avgTempA
+    }
+  })
 }
 
 // Calculate average temperature
@@ -628,22 +581,22 @@ const getAverageTemperature = (shop) => {
   let count = 0
 
   shop.passerelles.forEach((gateway) => {
-    gateway.machines.forEach((fridge) => {
+    gateway.machines?.forEach((fridge) => {
       fridge.sondes.forEach((probe) => {
-        probe.mesures.forEach((mesure) => {
-          totalTemp += mesure.temperature
+        probe.mesures.forEach((measure) => {
+          totalTemp += measure.temperature
           count++
         })
       })
     })
   })
 
-  return totalTemp / count
+  return count > 0 ? totalTemp / count : 0
 }
 
 // Modal visibility
-const showModalGraphTemp = (probe) => {
-  selectedMachine.value = probe
+const showModalGraphTemp = (machine) => {
+  selectedMachine.value = machine
   showProbeChart.value = true
 }
 
@@ -668,7 +621,7 @@ const hideModal = () => {
 }
 
 // Chart options computed property
-const chatOptions = computed(() => ({
+const chartOptions = computed(() => ({
   chart: {
     type: "line",
   },
@@ -676,6 +629,10 @@ const chatOptions = computed(() => ({
     categories: selectedMachine.value?.sondes[0]?.mesures.map(
       (temperature) => temperature.date
     ),
+  },
+  yaxis: {
+    min: 0,
+    max: 40,
   },
   annotations: {
     yaxis: [
@@ -695,7 +652,7 @@ const chatOptions = computed(() => ({
       },
       {
         y: 15,
-        y2: 20,
+        y2: 40,
         borderColor: "#000",
         fillColor: "#fecaca",
         opacity: 0.4,
@@ -709,29 +666,8 @@ watch([search, sortKey, sortOrder], () => {
   applyFiltersAndSort()
 })
 
-// Toggle filter
-const toggleFilter = (color) => {
-  filters.value[color] = !filters.value[color]
-  applyFiltersAndSort()
-}
-
 // Fetch shops on mount
 onMounted(() => {
   fetchShops()
 })
 </script>
-
-<style>
-.expand-enter-active,
-.expand-leave-active {
-  transition: all 0.3s ease;
-}
-
-.expand-enter,
-.expand-leave-to
-
-/* .expand-leave-active in <2.1.8 */ {
-  opacity: 0;
-  max-height: 0;
-}
-</style>
