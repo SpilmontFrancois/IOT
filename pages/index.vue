@@ -19,7 +19,9 @@
 
     <div class="flex space-x-6">
       <div class="card space-y-2 w-2/3">
-        <span class="text-lg font-semibold">Filtres</span>
+        <span class="text-lg font-semibold">
+          Statistiques des températures des magasins
+        </span>
 
         <div class="flex items-center justify-evenly w-full">
           <div class="flex items-center space-x-2">
